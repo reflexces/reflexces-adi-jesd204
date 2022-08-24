@@ -1,0 +1,142 @@
+From 84b7a9954dfb17590b46f1ccda97a6770a58acb1 Mon Sep 17 00:00:00 2001
+From: Laszlo Nagy <laszlo.nagy@analog.com>
+Date: Fri, 28 Jan 2022 10:34:19 +0000
+Subject: [PATCH 1/1] avl_dacfifo: Make address parametrizable
+
+---
+ library/intel/avl_dacfifo/avl_dacfifo.v        |  7 ++++---
+ library/intel/avl_dacfifo/avl_dacfifo_hw.tcl   | 18 +++++++++---------
+ library/intel/avl_dacfifo/avl_dacfifo_rd.v     |  5 +++--
+ library/intel/avl_dacfifo/avl_dacfifo_wr.v     |  5 +++--
+ .../a10soc/a10soc_plddr4_dacfifo_qsys.tcl      |  2 +-
+ 5 files changed, 20 insertions(+), 17 deletions(-)
+
+diff --git a/library/intel/avl_dacfifo/avl_dacfifo.v b/library/intel/avl_dacfifo/avl_dacfifo.v
+index e6565970..4f6e34c8 100644
+--- a/library/intel/avl_dacfifo/avl_dacfifo.v
++++ b/library/intel/avl_dacfifo/avl_dacfifo.v
+@@ -100,9 +100,9 @@ module avl_dacfifo #(
+   wire                                  dma_ready_bypass_s;
+   wire                                  avl_read_s;
+   wire                                  avl_write_s;
+-  wire        [ 24:0]                   avl_wr_address_s;
+-  wire        [ 24:0]                   avl_rd_address_s;
+-  wire        [ 24:0]                   avl_last_address_s;
++  wire        [(AVL_ADDRESS_WIDTH-1):0] avl_wr_address_s;
++  wire        [(AVL_ADDRESS_WIDTH-1):0] avl_rd_address_s;
++  wire        [(AVL_ADDRESS_WIDTH-1):0] avl_last_address_s;
+   wire        [  6:0]                   avl_last_burstcount_s;
+   wire        [  7:0]                   dma_last_beats_s;
+   wire        [  6:0]                   avl_wr_burstcount_s;
+@@ -123,6 +123,7 @@ module avl_dacfifo #(
+     .DMA_DATA_WIDTH (DMA_DATA_WIDTH),
+     .AVL_DDR_BASE_ADDRESS (AVL_BASE_ADDRESS),
+     .DMA_MEM_ADDRESS_WIDTH(DMA_MEM_ADDRESS_WIDTH),
++    .AVL_DDR_ADDRESS_LIMIT (AVL_ADDRESS_LIMIT),
+     .AVL_BURST_LENGTH (AVL_BURST_LENGTH)
+   ) i_wr (
+     .dma_clk (dma_clk),
+diff --git a/library/intel/avl_dacfifo/avl_dacfifo_hw.tcl b/library/intel/avl_dacfifo/avl_dacfifo_hw.tcl
+index d08423d4..aad04089 100644
+--- a/library/intel/avl_dacfifo/avl_dacfifo_hw.tcl
++++ b/library/intel/avl_dacfifo/avl_dacfifo_hw.tcl
+@@ -59,15 +59,15 @@ set_interface_property avl_reset associatedclock avl_clock
+ add_interface_port avl_reset avl_reset reset input 1
+ 
+ add_interface amm_ddr avalon master
+-add_interface_port amm_ddr avl_address address output 25
+-add_interface_port amm_ddr avl_burstcount burstcount output 7
+-add_interface_port amm_ddr avl_byteenable byteenable output 64
+-add_interface_port amm_ddr avl_read read output 1
+-add_interface_port amm_ddr avl_readdata readdata input 512
+-add_interface_port amm_ddr avl_readdata_valid readdatavalid input 1
+-add_interface_port amm_ddr avl_ready waitrequest_n input 1
+-add_interface_port amm_ddr avl_write write output 1
+-add_interface_port amm_ddr avl_writedata writedata output 512
++add_interface_port  amm_ddr  avl_address         address        output  AVL_ADDRESS_WIDTH
++add_interface_port  amm_ddr  avl_burstcount      burstcount     output  7
++add_interface_port  amm_ddr  avl_byteenable      byteenable     output  AVL_DATA_WIDTH/8
++add_interface_port  amm_ddr  avl_read            read           output  1
++add_interface_port  amm_ddr  avl_readdata        readdata       input   AVL_DATA_WIDTH
++add_interface_port  amm_ddr  avl_readdata_valid  readdatavalid  input   1
++add_interface_port  amm_ddr  avl_ready           waitrequest_n  input   1
++add_interface_port  amm_ddr  avl_write           write          output  1
++add_interface_port  amm_ddr  avl_writedata       writedata      output  AVL_DATA_WIDTH
+ 
+ set_interface_property amm_ddr associatedClock avl_clock
+ set_interface_property amm_ddr associatedReset avl_reset
+diff --git a/library/intel/avl_dacfifo/avl_dacfifo_rd.v b/library/intel/avl_dacfifo/avl_dacfifo_rd.v
+index 1f34801d..75715044 100644
+--- a/library/intel/avl_dacfifo/avl_dacfifo_rd.v
++++ b/library/intel/avl_dacfifo/avl_dacfifo_rd.v
+@@ -39,6 +39,7 @@ module avl_dacfifo_rd #(
+ 
+   parameter     AVL_DATA_WIDTH = 512,
+   parameter     DAC_DATA_WIDTH = 64,
++  parameter     AVL_ADDRESS_WIDTH = 25,
+   parameter     AVL_BURST_LENGTH = 127,
+   parameter     AVL_DDR_BASE_ADDRESS = 0,
+   parameter     AVL_DDR_ADDRESS_LIMIT = 33554432,
+@@ -53,7 +54,7 @@ module avl_dacfifo_rd #(
+ 
+   input                                     avl_clk,
+   input                                     avl_reset,
+-  output  reg [24:0]                        avl_address,
++  output  reg [(AVL_ADDRESS_WIDTH-1):0]     avl_address,
+   output  reg [ 6:0]                        avl_burstcount,
+   output      [63:0]                        avl_byteenable,
+   input                                     avl_waitrequest,
+@@ -61,7 +62,7 @@ module avl_dacfifo_rd #(
+   output  reg                               avl_read,
+   input       [AVL_DATA_WIDTH-1:0]          avl_data,
+ 
+-  input       [24:0]                        avl_last_address,
++  input       [(AVL_ADDRESS_WIDTH-1):0]     avl_last_address,
+   input       [ 6:0]                        avl_last_burstcount,
+   input       [ 7:0]                        dma_last_beats,
+   input                                     avl_xfer_req_in,
+diff --git a/library/intel/avl_dacfifo/avl_dacfifo_wr.v b/library/intel/avl_dacfifo/avl_dacfifo_wr.v
+index 9d8f006d..8b7a51c1 100644
+--- a/library/intel/avl_dacfifo/avl_dacfifo_wr.v
++++ b/library/intel/avl_dacfifo/avl_dacfifo_wr.v
+@@ -39,6 +39,7 @@ module avl_dacfifo_wr #(
+ 
+   parameter     AVL_DATA_WIDTH = 512,
+   parameter     DMA_DATA_WIDTH = 64,
++  parameter     AVL_ADDRESS_WIDTH = 25,
+   parameter     AVL_BURST_LENGTH = 128,
+   parameter     AVL_DDR_BASE_ADDRESS = 0,
+   parameter     AVL_DDR_ADDRESS_LIMIT = 33554432,
+@@ -56,14 +57,14 @@ module avl_dacfifo_wr #(
+ 
+   input                                 avl_clk,
+   input                                 avl_reset,
+-  output  reg [24:0]                    avl_address,
++  output  reg [(AVL_ADDRESS_WIDTH-1):0] avl_address,
+   output  reg [ 6:0]                    avl_burstcount,
+   output      [63:0]                    avl_byteenable,
+   input                                 avl_waitrequest,
+   output  reg                           avl_write,
+   output  reg [AVL_DATA_WIDTH-1:0]      avl_data,
+ 
+-  output  reg [24:0]                    avl_last_address,
++  output  reg [(AVL_ADDRESS_WIDTH-1):0] avl_last_address,
+   output  reg [ 6:0]                    avl_last_burstcount,
+   output  reg                           avl_xfer_req_out,
+   input                                 avl_xfer_req_in);
+diff --git a/projects/common/a10soc/a10soc_plddr4_dacfifo_qsys.tcl b/projects/common/a10soc/a10soc_plddr4_dacfifo_qsys.tcl
+index 051786d7..5e05bdb2 100644
+--- a/projects/common/a10soc/a10soc_plddr4_dacfifo_qsys.tcl
++++ b/projects/common/a10soc/a10soc_plddr4_dacfifo_qsys.tcl
+@@ -67,7 +67,7 @@ proc ad_dacfifo_create {dac_fifo_name dac_data_width dac_dma_data_width dac_fifo
+   set_instance_parameter_value $dac_fifo_name {AVL_DATA_WIDTH} {512}
+   set_instance_parameter_value $dac_fifo_name {AVL_ADDRESS_WIDTH} {25}
+   set_instance_parameter_value $dac_fifo_name {AVL_BASE_ADDRESS} {0}
+-  set_instance_parameter_value $dac_fifo_name {AVL_ADDRESS_LIMIT} {0x8fffffff}
++  set_instance_parameter_value $dac_fifo_name {AVL_ADDRESS_LIMIT} {0x2000000}
+   set_instance_parameter_value $dac_fifo_name {DAC_MEM_ADDRESS_WIDTH} {12}
+   set_instance_parameter_value $dac_fifo_name {DMA_MEM_ADDRESS_WIDTH} {12}
+   set_instance_parameter_value $dac_fifo_name {AVL_BURST_LENGTH} {64}
+-- 
+2.25.1
+

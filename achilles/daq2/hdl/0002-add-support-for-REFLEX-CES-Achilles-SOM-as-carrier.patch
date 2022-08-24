@@ -1,0 +1,796 @@
+From b10d9ddfea7a6108abe6724e6ba2277b1f8acdf3 Mon Sep 17 00:00:00 2001
+From: Dan Negvesky <dnegvesky@reflexces.com>
+Date: Thu, 21 Jul 2022 15:17:49 -0400
+Subject: [PATCH 1/1] add support for REFLEX CES Achiles SOM as carrier
+
+Signed-off-by: Dan Negvesky <dnegvesky@reflexces.com>
+---
+ .../achilles/achilles_plddr4_assign.tcl       |  81 +++++
+ .../achilles/achilles_plddr4_dacfifo_qsys.tcl |  87 +++++
+ .../achilles/achilles_system_assign.tcl       | 227 ++++++++++++
+ .../common/achilles/achilles_system_qsys.tcl  | 330 ++++++++++++++++++
+ projects/scripts/adi_project_intel.tcl        |   8 +-
+ 5 files changed, 732 insertions(+), 1 deletion(-)
+ create mode 100644 projects/common/achilles/achilles_plddr4_assign.tcl
+ create mode 100644 projects/common/achilles/achilles_plddr4_dacfifo_qsys.tcl
+ create mode 100644 projects/common/achilles/achilles_system_assign.tcl
+ create mode 100644 projects/common/achilles/achilles_system_qsys.tcl
+
+diff --git a/projects/common/achilles/achilles_plddr4_assign.tcl b/projects/common/achilles/achilles_plddr4_assign.tcl
+new file mode 100644
+index 000000000..347c84fdd
+--- /dev/null
++++ b/projects/common/achilles/achilles_plddr4_assign.tcl
+@@ -0,0 +1,81 @@
++# pl-ddr4 settings
++
++set_location_assignment PIN_AL5   -to sys_ddr_ref_clk
++set_instance_assignment -name IO_STANDARD "1.2 V" -to sys_ddr_ref_clk
++
++set_location_assignment PIN_AJ1   -to sys_ddr_clk_p
++set_location_assignment PIN_AH2   -to sys_ddr_clk_n
++set_location_assignment PIN_AH3   -to sys_ddr_a[0]
++set_location_assignment PIN_AG3   -to sys_ddr_a[1]
++set_location_assignment PIN_AG6   -to sys_ddr_a[2]
++set_location_assignment PIN_AF6   -to sys_ddr_a[3]
++set_location_assignment PIN_AF1   -to sys_ddr_a[4]
++set_location_assignment PIN_AE1   -to sys_ddr_a[5]
++set_location_assignment PIN_AF4   -to sys_ddr_a[6]
++set_location_assignment PIN_AF3   -to sys_ddr_a[7]
++set_location_assignment PIN_AG5   -to sys_ddr_a[8]
++set_location_assignment PIN_AF5   -to sys_ddr_a[9]
++set_location_assignment PIN_AE2   -to sys_ddr_a[10]
++set_location_assignment PIN_AE3   -to sys_ddr_a[11]
++set_location_assignment PIN_AE7   -to sys_ddr_a[12]
++set_location_assignment PIN_AC8   -to sys_ddr_a[13]
++set_location_assignment PIN_AD9   -to sys_ddr_a[14]
++set_location_assignment PIN_AC9   -to sys_ddr_a[15]
++set_location_assignment PIN_AC10  -to sys_ddr_a[16]
++set_location_assignment PIN_AD6   -to sys_ddr_ba[0]
++set_location_assignment PIN_AD7   -to sys_ddr_ba[1]
++set_location_assignment PIN_AC7   -to sys_ddr_bg[0]
++set_location_assignment PIN_AL1   -to sys_ddr_bg[1]
++set_location_assignment PIN_AJ4   -to sys_ddr_cke
++set_location_assignment PIN_AK2   -to sys_ddr_cs_n
++set_location_assignment PIN_AK4   -to sys_ddr_odt
++set_location_assignment PIN_AK1   -to sys_ddr_reset_n
++set_location_assignment PIN_AJ2   -to sys_ddr_act_n
++set_location_assignment PIN_AG2   -to sys_ddr_par
++set_location_assignment PIN_AH4   -to sys_ddr_alert_n
++set_location_assignment PIN_AM1   -to sys_ddr_dqs_p[0]
++set_location_assignment PIN_AM2   -to sys_ddr_dqs_n[0]
++set_location_assignment PIN_AP9   -to sys_ddr_dqs_p[1]
++set_location_assignment PIN_AN9   -to sys_ddr_dqs_n[1]
++set_location_assignment PIN_AG10  -to sys_ddr_dqs_p[2]
++set_location_assignment PIN_AF10  -to sys_ddr_dqs_n[2]
++set_location_assignment PIN_AB8   -to sys_ddr_dqs_p[3]
++set_location_assignment PIN_AB7   -to sys_ddr_dqs_n[3]
++set_location_assignment PIN_AM3   -to sys_ddr_dq[0]
++set_location_assignment PIN_AL6   -to sys_ddr_dq[1]
++set_location_assignment PIN_AL3   -to sys_ddr_dq[2]
++set_location_assignment PIN_AM5   -to sys_ddr_dq[3]
++set_location_assignment PIN_AP4   -to sys_ddr_dq[4]
++set_location_assignment PIN_AK6   -to sys_ddr_dq[5]
++set_location_assignment PIN_AN4   -to sys_ddr_dq[6]
++set_location_assignment PIN_AL4   -to sys_ddr_dq[7]
++set_location_assignment PIN_AL8   -to sys_ddr_dq[8]
++set_location_assignment PIN_AN8   -to sys_ddr_dq[9]
++set_location_assignment PIN_AP6   -to sys_ddr_dq[10]
++set_location_assignment PIN_AL9   -to sys_ddr_dq[11]
++set_location_assignment PIN_AP5   -to sys_ddr_dq[12]
++set_location_assignment PIN_AP7   -to sys_ddr_dq[13]
++set_location_assignment PIN_AM8   -to sys_ddr_dq[14]
++set_location_assignment PIN_AM7   -to sys_ddr_dq[15]
++set_location_assignment PIN_AH10  -to sys_ddr_dq[16]
++set_location_assignment PIN_AE8   -to sys_ddr_dq[17]
++set_location_assignment PIN_AG11  -to sys_ddr_dq[18]
++set_location_assignment PIN_AF9   -to sys_ddr_dq[19]
++set_location_assignment PIN_AH9   -to sys_ddr_dq[20]
++set_location_assignment PIN_AE11  -to sys_ddr_dq[21]
++set_location_assignment PIN_AF8   -to sys_ddr_dq[22]
++set_location_assignment PIN_AF11  -to sys_ddr_dq[23]
++set_location_assignment PIN_AB5   -to sys_ddr_dq[24]
++set_location_assignment PIN_AB11  -to sys_ddr_dq[25]
++set_location_assignment PIN_AD4   -to sys_ddr_dq[26]
++set_location_assignment PIN_AB6   -to sys_ddr_dq[27]
++set_location_assignment PIN_AD2   -to sys_ddr_dq[28]
++set_location_assignment PIN_AB10  -to sys_ddr_dq[29]
++set_location_assignment PIN_AE4   -to sys_ddr_dq[30]
++set_location_assignment PIN_AC5   -to sys_ddr_dq[31]
++set_location_assignment PIN_AM6   -to sys_ddr_dbi_n[0]
++set_location_assignment PIN_AN5   -to sys_ddr_dbi_n[1]
++set_location_assignment PIN_AE9   -to sys_ddr_dbi_n[2]
++set_location_assignment PIN_AD1   -to sys_ddr_dbi_n[3]
++set_location_assignment PIN_AJ7   -to sys_ddr_rzq
++
+diff --git a/projects/common/achilles/achilles_plddr4_dacfifo_qsys.tcl b/projects/common/achilles/achilles_plddr4_dacfifo_qsys.tcl
+new file mode 100644
+index 000000000..32cf9d2e8
+--- /dev/null
++++ b/projects/common/achilles/achilles_plddr4_dacfifo_qsys.tcl
+@@ -0,0 +1,87 @@
++proc ad_dacfifo_create {dac_fifo_name dac_data_width dac_dma_data_width dac_fifo_address_width} {
++
++  # pl-ddr4 settings
++
++# commented settings are for 2400 MT/s DDR4 settings, currently failing timing in Quartus v19.3 (branch hdl_2019_r2)
++  add_instance sys_ddr4_cntrl altera_emif
++  set_instance_parameter_value sys_ddr4_cntrl {PROTOCOL_ENUM} {PROTOCOL_DDR4}
++#  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_MEM_CLK_FREQ_MHZ} {1200}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_MEM_CLK_FREQ_MHZ} {1066.5}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_DEFAULT_REF_CLK_FREQ} {0}
++#  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_USER_REF_CLK_FREQ_MHZ} {150}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_USER_REF_CLK_FREQ_MHZ} {133.313}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_RATE_ENUM} {RATE_QUARTER}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_FORMAT_ENUM} {MEM_FORMAT_DISCRETE}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_DQ_WIDTH} {32}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_DQ_PER_DQS} {8}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_ROW_ADDR_WIDTH} {16}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_COL_ADDR_WIDTH} {10}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_BANK_ADDR_WIDTH} {2}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_BANK_GROUP_WIDTH} {2}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_DM_EN} {1}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_ALERT_N_PLACEMENT_ENUM} {DDR4_ALERT_N_PLACEMENT_AC_LANES}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_ALERT_N_AC_LANE} {0}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_ALERT_N_AC_PIN} {7}
++#  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TCL} {13}
++#  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_WTCL} {12}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TCL} {19}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_WTCL} {16}  
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_RTT_NOM_ENUM} {DDR4_RTT_NOM_RZQ_4}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_IO_VOLTAGE} {1.2}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_DEFAULT_IO} {0}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_USER_AC_IO_STD_ENUM} {IO_STD_SSTL_12}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_USER_AC_MODE_ENUM} {OUT_OCT_40_CAL}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_USER_CK_IO_STD_ENUM} {IO_STD_SSTL_12}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_USER_CK_MODE_ENUM} {OUT_OCT_40_CAL}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_USER_DATA_IO_STD_ENUM} {IO_STD_POD_12}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_USER_DATA_OUT_MODE_ENUM} {OUT_OCT_34_CAL}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_USER_DATA_IN_MODE_ENUM} {IN_OCT_120_CAL}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_USER_PLL_REF_CLK_IO_STD_ENUM} {IO_STD_CMOS_12}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_PLL_REF_CLK_IO_STD_ENUM} {IO_STD_CMOS_12}
++  set_instance_parameter_value sys_ddr4_cntrl {PHY_DDR4_USER_RZQ_IO_STD_ENUM} {IO_STD_CMOS_12}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_SPEEDBIN_ENUM} {DDR4_SPEEDBIN_2400}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TDQSQ_UI} {0.17}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TDQSCK_PS} {175}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TWLS_PS} {0.0}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TWLH_PS} {139.2}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TINIT_US} {500}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TRAS_NS} {32.0}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TRCD_NS} {13.32}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TRP_NS} {13.32}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TWR_NS} {15.0}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TRRD_S_CYC} {7}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TRRD_L_CYC} {8}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TFAW_NS} {30.0}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TCCD_S_CYC} {4}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TCCD_L_CYC} {6}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TWTR_S_CYC} {3}
++  set_instance_parameter_value sys_ddr4_cntrl {MEM_DDR4_TWTR_L_CYC} {9}
++  set_instance_parameter_value sys_ddr4_cntrl {CTRL_DDR4_ECC_EN} {0}
++
++  add_interface sys_ddr_ref_clk clock sink
++  set_interface_property sys_ddr_ref_clk EXPORT_OF sys_ddr4_cntrl.pll_ref_clk_clock_sink
++  add_interface sys_ddr_oct conduit end
++  set_interface_property sys_ddr_oct EXPORT_OF sys_ddr4_cntrl.oct_conduit_end
++  add_interface sys_ddr_mem conduit end
++  set_interface_property sys_ddr_mem EXPORT_OF sys_ddr4_cntrl.mem_conduit_end
++  add_interface sys_ddr_status conduit end
++  set_interface_property sys_ddr_status EXPORT_OF sys_ddr4_cntrl.status_conduit_end
++
++  add_instance $dac_fifo_name avl_dacfifo
++  set_instance_parameter_value $dac_fifo_name {DAC_DATA_WIDTH} $dac_data_width
++  set_instance_parameter_value $dac_fifo_name {DMA_DATA_WIDTH} $dac_dma_data_width
++  set_instance_parameter_value $dac_fifo_name {AVL_DATA_WIDTH} {512}
++  set_instance_parameter_value $dac_fifo_name {AVL_ADDRESS_WIDTH} {26}
++  set_instance_parameter_value $dac_fifo_name {AVL_BASE_ADDRESS} {0}
++  set_instance_parameter_value $dac_fifo_name {AVL_ADDRESS_LIMIT} {0x8fffffff}
++  set_instance_parameter_value $dac_fifo_name {DAC_MEM_ADDRESS_WIDTH} {12}
++  set_instance_parameter_value $dac_fifo_name {DMA_MEM_ADDRESS_WIDTH} {12}
++  set_instance_parameter_value $dac_fifo_name {AVL_BURST_LENGTH} {64}
++
++  add_connection sys_clk.clk_reset sys_ddr4_cntrl.global_reset_reset_sink
++  add_connection sys_ddr4_cntrl.emif_usr_reset_reset_source $dac_fifo_name.avl_reset
++  add_connection sys_ddr4_cntrl.emif_usr_clk_clock_source $dac_fifo_name.avl_clock
++  add_connection $dac_fifo_name.amm_ddr sys_ddr4_cntrl.ctrl_amm_avalon_slave_0
++  set_connection_parameter_value $dac_fifo_name.amm_ddr/sys_ddr4_cntrl.ctrl_amm_avalon_slave_0 baseAddress {0x0}
++
++}
+diff --git a/projects/common/achilles/achilles_system_assign.tcl b/projects/common/achilles/achilles_system_assign.tcl
+new file mode 100644
+index 000000000..08bd46c1e
+--- /dev/null
++++ b/projects/common/achilles/achilles_system_assign.tcl
+@@ -0,0 +1,227 @@
++# achilles carrier defaults
++# clocks and resets
++
++set_location_assignment PIN_AJ9  -to sys_clk
++set_location_assignment PIN_A26  -to sys_resetn
++set_instance_assignment -name IO_STANDARD "1.2 V" -to sys_clk
++set_instance_assignment -name GLOBAL_SIGNAL "GLOBAL CLOCK" -to sys_clk
++set_instance_assignment -name IO_STANDARD "1.2 V" -to sys_resetn
++set_global_assignment -name PROGRAMMABLE_POWER_TECHNOLOGY_SETTING "FORCE ALL USED TILES TO HIGH SPEED"
++
++# hps-ddr4 (32)
++
++set_location_assignment PIN_AL27  -to hps_ddr_ref_clk
++set_location_assignment PIN_L23   -to hps_ddr_clk_p
++set_location_assignment PIN_M23   -to hps_ddr_clk_n
++set_location_assignment PIN_H27   -to hps_ddr_a[0]
++set_location_assignment PIN_G27   -to hps_ddr_a[1]
++set_location_assignment PIN_G23   -to hps_ddr_a[2]
++set_location_assignment PIN_G22   -to hps_ddr_a[3]
++set_location_assignment PIN_H25   -to hps_ddr_a[4]
++set_location_assignment PIN_G25   -to hps_ddr_a[5]
++set_location_assignment PIN_H24   -to hps_ddr_a[6]
++set_location_assignment PIN_H23   -to hps_ddr_a[7]
++set_location_assignment PIN_H22   -to hps_ddr_a[8]
++set_location_assignment PIN_J22   -to hps_ddr_a[9]
++set_location_assignment PIN_G26   -to hps_ddr_a[10]
++set_location_assignment PIN_F26   -to hps_ddr_a[11]
++set_location_assignment PIN_F24   -to hps_ddr_a[12]
++set_location_assignment PIN_E27   -to hps_ddr_a[13]
++set_location_assignment PIN_D27   -to hps_ddr_a[14]
++set_location_assignment PIN_E22   -to hps_ddr_a[15]
++set_location_assignment PIN_F23   -to hps_ddr_a[16]
++set_location_assignment PIN_D26   -to hps_ddr_ba[0]
++set_location_assignment PIN_D25   -to hps_ddr_ba[1]
++set_location_assignment PIN_C25   -to hps_ddr_bg[0]
++set_location_assignment PIN_M24   -to hps_ddr_bg[1]
++set_location_assignment PIN_J27   -to hps_ddr_cke
++set_location_assignment PIN_K24   -to hps_ddr_cs_n
++set_location_assignment PIN_K25   -to hps_ddr_odt
++set_location_assignment PIN_L24   -to hps_ddr_reset_n
++set_location_assignment PIN_J24   -to hps_ddr_act_n
++set_location_assignment PIN_K22   -to hps_ddr_par
++set_location_assignment PIN_AN20  -to hps_ddr_alert_n
++set_location_assignment PIN_AM22  -to hps_ddr_dqs_p[0]
++set_location_assignment PIN_AN22  -to hps_ddr_dqs_n[0]
++set_location_assignment PIN_AH23  -to hps_ddr_dqs_p[1]
++set_location_assignment PIN_AH24  -to hps_ddr_dqs_n[1]
++set_location_assignment PIN_AM25  -to hps_ddr_dqs_p[2]
++set_location_assignment PIN_AM26  -to hps_ddr_dqs_n[2]
++set_location_assignment PIN_AG25  -to hps_ddr_dqs_p[3]
++set_location_assignment PIN_AF25  -to hps_ddr_dqs_n[3]
++set_location_assignment PIN_AP21  -to hps_ddr_dq[0]
++set_location_assignment PIN_AN24  -to hps_ddr_dq[1]
++set_location_assignment PIN_AP22  -to hps_ddr_dq[2]
++set_location_assignment PIN_AL24  -to hps_ddr_dq[3]
++set_location_assignment PIN_AP20  -to hps_ddr_dq[4]
++set_location_assignment PIN_AL25  -to hps_ddr_dq[5]
++set_location_assignment PIN_AM23  -to hps_ddr_dq[6]
++set_location_assignment PIN_AN23  -to hps_ddr_dq[7]
++set_location_assignment PIN_AK23  -to hps_ddr_dq[8]
++set_location_assignment PIN_AF24  -to hps_ddr_dq[9]
++set_location_assignment PIN_AK22  -to hps_ddr_dq[10]
++set_location_assignment PIN_AK24  -to hps_ddr_dq[11]
++set_location_assignment PIN_AF23  -to hps_ddr_dq[12]
++set_location_assignment PIN_AJ24  -to hps_ddr_dq[13]
++set_location_assignment PIN_AG23  -to hps_ddr_dq[14]
++set_location_assignment PIN_AL23  -to hps_ddr_dq[15]
++set_location_assignment PIN_AP26  -to hps_ddr_dq[16]
++set_location_assignment PIN_AL26  -to hps_ddr_dq[17]
++set_location_assignment PIN_AP27  -to hps_ddr_dq[18]
++set_location_assignment PIN_AK26  -to hps_ddr_dq[19]
++set_location_assignment PIN_AP25  -to hps_ddr_dq[20]
++set_location_assignment PIN_AK27  -to hps_ddr_dq[21]
++set_location_assignment PIN_AN25  -to hps_ddr_dq[22]
++set_location_assignment PIN_AN27  -to hps_ddr_dq[23]
++set_location_assignment PIN_AJ27  -to hps_ddr_dq[24]
++set_location_assignment PIN_AD24  -to hps_ddr_dq[25]
++set_location_assignment PIN_AJ26  -to hps_ddr_dq[26]
++set_location_assignment PIN_AH27  -to hps_ddr_dq[27]
++set_location_assignment PIN_AJ25  -to hps_ddr_dq[28]
++set_location_assignment PIN_AE24  -to hps_ddr_dq[29]
++set_location_assignment PIN_AH25  -to hps_ddr_dq[30]
++set_location_assignment PIN_AH26  -to hps_ddr_dq[31]
++set_location_assignment PIN_AP24  -to hps_ddr_dbi_n[0]
++set_location_assignment PIN_AE23  -to hps_ddr_dbi_n[1]
++set_location_assignment PIN_AM27  -to hps_ddr_dbi_n[2]
++set_location_assignment PIN_AD25  -to hps_ddr_dbi_n[3]
++set_location_assignment PIN_F25   -to hps_ddr_rzq
++
++# hps-ethernet
++
++set_location_assignment PIN_G20   -to hps_eth_rxclk
++set_location_assignment PIN_F20   -to hps_eth_rxctl
++set_location_assignment PIN_F19   -to hps_eth_rxd[0]
++set_location_assignment PIN_E19   -to hps_eth_rxd[1]
++set_location_assignment PIN_C20   -to hps_eth_rxd[2]
++set_location_assignment PIN_D20   -to hps_eth_rxd[3]
++set_location_assignment PIN_E17   -to hps_eth_txclk
++set_location_assignment PIN_E18   -to hps_eth_txctl
++set_location_assignment PIN_E21   -to hps_eth_txd[0]
++set_location_assignment PIN_D21   -to hps_eth_txd[1]
++set_location_assignment PIN_D22   -to hps_eth_txd[2]
++set_location_assignment PIN_C22   -to hps_eth_txd[3]
++set_location_assignment PIN_L19   -to hps_eth_mdc
++set_location_assignment PIN_K19   -to hps_eth_mdio
++
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_rxclk
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_rxctl
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_rxd[0]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_rxd[1]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_rxd[2]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_rxd[3]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_txclk
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_txctl
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_txd[0]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_txd[1]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_txd[2]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_txd[3]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_mdc
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_eth_mdio
++
++set_instance_assignment -name OUTPUT_DELAY_CHAIN 8 -to hps_eth_txclk
++
++# hps-sdio
++
++set_location_assignment PIN_D15   -to hps_sdio_clk
++set_location_assignment PIN_C17   -to hps_sdio_cmd
++set_location_assignment PIN_B15   -to hps_sdio_d[0]
++set_location_assignment PIN_B17   -to hps_sdio_d[1]
++set_location_assignment PIN_D16   -to hps_sdio_d[2]
++set_location_assignment PIN_A16   -to hps_sdio_d[3]
++set_location_assignment PIN_G16   -to hps_sdio_d[4]
++set_location_assignment PIN_A15   -to hps_sdio_d[5]
++set_location_assignment PIN_C15   -to hps_sdio_d[6]
++set_location_assignment PIN_F16   -to hps_sdio_d[7]
++
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_sdio_clk
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_sdio_cmd
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_sdio_d[0]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_sdio_d[1]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_sdio_d[2]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_sdio_d[3]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_sdio_d[4]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_sdio_d[5]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_sdio_d[6]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_sdio_d[7]
++
++set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to hps_sdio_clk
++set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to hps_sdio_cmd
++set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to hps_sdio_d[0]
++set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to hps_sdio_d[1]
++set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to hps_sdio_d[2]
++set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to hps_sdio_d[3]
++set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to hps_sdio_d[4]
++set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to hps_sdio_d[5]
++set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to hps_sdio_d[6]
++set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to hps_sdio_d[7]
++set_instance_assignment -name SLEW_RATE 1 -to hps_sdio_clk
++set_instance_assignment -name SLEW_RATE 1 -to hps_sdio_cmd
++set_instance_assignment -name SLEW_RATE 1 -to hps_sdio_d[0]
++set_instance_assignment -name SLEW_RATE 1 -to hps_sdio_d[1]
++set_instance_assignment -name SLEW_RATE 1 -to hps_sdio_d[2]
++set_instance_assignment -name SLEW_RATE 1 -to hps_sdio_d[3]
++
++# hps-usb
++
++set_location_assignment PIN_J20   -to hps_usb_clk
++set_location_assignment PIN_J17   -to hps_usb_dir
++set_location_assignment PIN_F21   -to hps_usb_nxt
++set_location_assignment PIN_H20   -to hps_usb_stp
++set_location_assignment PIN_H17   -to hps_usb_d[0]
++set_location_assignment PIN_G21   -to hps_usb_d[1]
++set_location_assignment PIN_G18   -to hps_usb_d[2]
++set_location_assignment PIN_H18   -to hps_usb_d[3]
++set_location_assignment PIN_F18   -to hps_usb_d[4]
++set_location_assignment PIN_G17   -to hps_usb_d[5]
++set_location_assignment PIN_J19   -to hps_usb_d[6]
++set_location_assignment PIN_H19   -to hps_usb_d[7]
++
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_usb_clk
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_usb_dir
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_usb_nxt
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_usb_stp
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_usb_d[0]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_usb_d[1]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_usb_d[2]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_usb_d[3]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_usb_d[4]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_usb_d[5]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_usb_d[6]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_usb_d[7]
++
++# hps-uart
++
++set_location_assignment PIN_K18   -to hps_uart_tx
++set_location_assignment PIN_L18   -to hps_uart_rx
++set_location_assignment PIN_M17   -to hps_uart_cts_n
++set_location_assignment PIN_M18   -to hps_uart_rts_n
++
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_uart_tx
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_uart_rx
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_uart_cts_n
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_uart_rts_n
++
++# hps-i2c
++
++set_location_assignment PIN_L21   -to hps_i2c_scl
++set_location_assignment PIN_M21   -to hps_i2c_sda
++
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_i2c_scl
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_i2c_sda
++
++# gpio
++
++set_location_assignment PIN_J25  -to gpio_bd_o[0]  ; ## led_usr_g_n
++set_location_assignment PIN_J26  -to gpio_bd_o[1]  ; ## led_usr_r_n
++
++set_instance_assignment -name IO_STANDARD "1.2 V" -to gpio_bd_o[0]
++set_instance_assignment -name IO_STANDARD "1.2 V" -to gpio_bd_o[1]
++
++# hps-gpio
++
++set_location_assignment PIN_F15   -to hps_gpio[0]  ; ## hps_usr_led_g_n
++set_location_assignment PIN_H15   -to hps_gpio[1]  ; ## hps_usr_led_r_n
++
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_gpio[0]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to hps_gpio[1]
+diff --git a/projects/common/achilles/achilles_system_qsys.tcl b/projects/common/achilles/achilles_system_qsys.tcl
+new file mode 100644
+index 000000000..11a749409
+--- /dev/null
++++ b/projects/common/achilles/achilles_system_qsys.tcl
+@@ -0,0 +1,330 @@
++# achilles carrier qsys
++
++set system_type achilles
++
++# clock-&-reset
++
++add_instance sys_clk clock_source
++add_interface sys_clk clock sink
++#set_interface_property sys_clk EXPORT_OF sys_clk.clk_in
++add_interface sys_rstn reset sink
++set_interface_property sys_rstn EXPORT_OF sys_clk.clk_in_reset
++set_instance_parameter_value sys_clk {clockFrequency} {100000000.0}
++set_instance_parameter_value sys_clk {clockFrequencyKnown} {1}
++set_instance_parameter_value sys_clk {resetSynchronousEdges} {DEASSERT}
++
++add_instance sys_pll altera_iopll
++set_interface_property sys_clk EXPORT_OF sys_pll.refclk
++set_instance_parameter_value sys_pll {gui_reference_clock_frequency} {25.0}
++set_instance_parameter_value sys_pll {gui_reference_clock_frequency_ps} {40000.0}
++set_instance_parameter_value sys_pll {gui_use_locked} {0}
++set_instance_parameter_value sys_pll {hp_qsys_scripting_mode} {0}
++
++add_connection sys_pll.outclk0 sys_clk.clk_in
++add_connection sys_clk.clk_reset sys_pll.reset
++
++# hps
++# round-about way - qsys-script doesn't support {*}?
++
++variable  hps_io_list
++
++proc set_hps_io {io_index io_type} {
++
++  global hps_io_list
++  lappend hps_io_list $io_type
++}
++
++set_hps_io  IO_DEDICATED_04   SDMMC:D0
++set_hps_io  IO_DEDICATED_05   SDMMC:CMD
++set_hps_io  IO_DEDICATED_06   SDMMC:CCLK
++set_hps_io  IO_DEDICATED_07   SDMMC:D1
++set_hps_io  IO_DEDICATED_08   SDMMC:D2
++set_hps_io  IO_DEDICATED_09   SDMMC:D3
++set_hps_io  IO_DEDICATED_10   NONE
++set_hps_io  IO_DEDICATED_11   NONE
++set_hps_io  IO_DEDICATED_12   SDMMC:D4
++set_hps_io  IO_DEDICATED_13   SDMMC:D5
++set_hps_io  IO_DEDICATED_14   SDMMC:D6
++set_hps_io  IO_DEDICATED_15   SDMMC:D7
++set_hps_io  IO_DEDICATED_16   GPIO
++set_hps_io  IO_DEDICATED_17   GPIO
++set_hps_io  IO_SHARED_Q1_01   UART0:CTS_N
++set_hps_io  IO_SHARED_Q1_02   UART0:RTS_N
++set_hps_io  IO_SHARED_Q1_03   UART0:TX
++set_hps_io  IO_SHARED_Q1_04   UART0:RX
++set_hps_io  IO_SHARED_Q1_05   I2C0:SDA
++set_hps_io  IO_SHARED_Q1_06   I2C0:SCL
++set_hps_io  IO_SHARED_Q1_07   NONE
++set_hps_io  IO_SHARED_Q1_08   NONE
++set_hps_io  IO_SHARED_Q1_09   MDIO1:MDIO
++set_hps_io  IO_SHARED_Q1_10   MDIO1:MDC
++set_hps_io  IO_SHARED_Q1_11   NONE
++set_hps_io  IO_SHARED_Q1_12   NONE
++set_hps_io  IO_SHARED_Q2_01   USB1:CLK
++set_hps_io  IO_SHARED_Q2_02   USB1:STP
++set_hps_io  IO_SHARED_Q2_03   USB1:DIR
++set_hps_io  IO_SHARED_Q2_04   USB1:DATA0
++set_hps_io  IO_SHARED_Q2_05   USB1:DATA1
++set_hps_io  IO_SHARED_Q2_06   USB1:NXT
++set_hps_io  IO_SHARED_Q2_07   USB1:DATA2
++set_hps_io  IO_SHARED_Q2_08   USB1:DATA3
++set_hps_io  IO_SHARED_Q2_09   USB1:DATA4
++set_hps_io  IO_SHARED_Q2_10   USB1:DATA5
++set_hps_io  IO_SHARED_Q2_11   USB1:DATA6
++set_hps_io  IO_SHARED_Q2_12   USB1:DATA7
++set_hps_io  IO_SHARED_Q3_01   EMAC1:TX_CLK
++set_hps_io  IO_SHARED_Q3_02   EMAC1:TX_CTL
++set_hps_io  IO_SHARED_Q3_03   EMAC1:RX_CLK
++set_hps_io  IO_SHARED_Q3_04   EMAC1:RX_CTL
++set_hps_io  IO_SHARED_Q3_05   EMAC1:TXD0
++set_hps_io  IO_SHARED_Q3_06   EMAC1:TXD1
++set_hps_io  IO_SHARED_Q3_07   EMAC1:RXD0
++set_hps_io  IO_SHARED_Q3_08   EMAC1:RXD1
++set_hps_io  IO_SHARED_Q3_09   EMAC1:TXD2
++set_hps_io  IO_SHARED_Q3_10   EMAC1:TXD3
++set_hps_io  IO_SHARED_Q3_11   EMAC1:RXD2
++set_hps_io  IO_SHARED_Q3_12   EMAC1:RXD3
++set_hps_io  IO_SHARED_Q4_01   NONE
++set_hps_io  IO_SHARED_Q4_02   NONE
++set_hps_io  IO_SHARED_Q4_03   NONE
++set_hps_io  IO_SHARED_Q4_04   NONE
++set_hps_io  IO_SHARED_Q4_05   NONE
++set_hps_io  IO_SHARED_Q4_06   NONE
++set_hps_io  IO_SHARED_Q4_07   NONE
++set_hps_io  IO_SHARED_Q4_08   NONE
++set_hps_io  IO_SHARED_Q4_09   NONE
++set_hps_io  IO_SHARED_Q4_10   NONE
++set_hps_io  IO_SHARED_Q4_11   NONE
++set_hps_io  IO_SHARED_Q4_12   NONE
++
++add_instance sys_hps altera_arria10_hps
++set_instance_parameter_value sys_hps {MPU_EVENTS_Enable} {0}
++set_instance_parameter_value sys_hps {F2S_Width} {0}
++set_instance_parameter_value sys_hps {S2F_Width} {0}
++set_instance_parameter_value sys_hps {LWH2F_Enable} {1}
++set_instance_parameter_value sys_hps {F2SDRAM_PORT_CONFIG} {6}
++set_instance_parameter_value sys_hps {F2SDRAM0_ENABLED} {1}
++set_instance_parameter_value sys_hps {F2SDRAM2_ENABLED} {1}
++set_instance_parameter_value sys_hps {F2SINTERRUPT_Enable} {1}
++set_instance_parameter_value sys_hps {HPS_IO_Enable} $hps_io_list
++set_instance_parameter_value sys_hps {SDMMC_PinMuxing} {IO}
++set_instance_parameter_value sys_hps {SDMMC_Mode} {8-bit}
++set_instance_parameter_value sys_hps {USB1_PinMuxing} {IO}
++set_instance_parameter_value sys_hps {USB1_Mode} {default}
++set_instance_parameter_value sys_hps {EMAC1_PinMuxing} {IO}
++set_instance_parameter_value sys_hps {EMAC1_Mode} {RGMII_with_MDIO}
++#set_instance_parameter_value sys_hps {EMAC2_PinMuxing} {IO}
++#set_instance_parameter_value sys_hps {EMAC2_Mode} {RGMII_with_MDIO}
++set_instance_parameter_value sys_hps {UART0_PinMuxing} {IO}
++#set_instance_parameter_value sys_hps {UART0_Mode} {No_flow_control}
++set_instance_parameter_value sys_hps {UART0_Mode} {Flow_control}
++set_instance_parameter_value sys_hps {I2C0_PinMuxing} {IO}
++set_instance_parameter_value sys_hps {I2C0_Mode} {default}
++set_instance_parameter_value sys_hps {F2H_COLD_RST_Enable} {1}
++set_instance_parameter_value sys_hps {H2F_USER0_CLK_Enable} {1}
++set_instance_parameter_value sys_hps {H2F_USER0_CLK_FREQ} {175}
++set_instance_parameter_value sys_hps {H2F_USER1_CLK_Enable} {1}
++set_instance_parameter_value sys_hps {H2F_USER1_CLK_FREQ} {250}
++set_instance_parameter_value sys_hps {CLK_SDMMC_SOURCE} {1}
++
++add_interface sys_hps_rstn reset sink
++set_interface_property sys_hps_rstn EXPORT_OF sys_hps.f2h_cold_reset_req
++add_interface sys_hps_out_rstn reset source
++set_interface_property sys_hps_out_rstn EXPORT_OF sys_hps.h2f_reset
++add_connection sys_clk.clk sys_hps.h2f_lw_axi_clock
++add_connection sys_clk.clk_reset sys_hps.h2f_lw_axi_reset
++add_interface sys_hps_io conduit end
++set_interface_property sys_hps_io EXPORT_OF sys_hps.hps_io
++
++# common dma interfaces
++
++add_instance sys_dma_clk clock_source
++set_instance_parameter_value sys_dma_clk {resetSynchronousEdges} {DEASSERT}
++set_instance_parameter_value sys_dma_clk {clockFrequencyKnown} {true}
++add_connection sys_clk.clk_reset sys_dma_clk.clk_in_reset
++add_connection sys_hps.h2f_user0_clock sys_dma_clk.clk_in
++add_connection sys_dma_clk.clk sys_hps.f2sdram0_clock
++add_connection sys_dma_clk.clk_reset sys_hps.f2sdram0_reset
++
++add_instance sys_dma_clk_2 clock_source
++set_instance_parameter_value sys_dma_clk_2 {resetSynchronousEdges} {DEASSERT}
++set_instance_parameter_value sys_dma_clk_2 {clockFrequencyKnown} {true}
++add_connection sys_clk.clk_reset sys_dma_clk_2.clk_in_reset
++add_connection sys_hps.h2f_user1_clock sys_dma_clk_2.clk_in
++add_connection sys_dma_clk_2.clk sys_hps.f2sdram2_clock
++add_connection sys_dma_clk_2.clk_reset sys_hps.f2sdram2_reset
++
++# ddr4 interface
++add_instance sys_hps_ddr4_cntrl altera_emif_a10_hps
++set_instance_parameter_value sys_hps_ddr4_cntrl {BOARD_DDR4_AC_TO_CK_SKEW_NS} {-0.024}
++set_instance_parameter_value sys_hps_ddr4_cntrl {BOARD_DDR4_BRD_SKEW_WITHIN_AC_NS} {0.029}
++set_instance_parameter_value sys_hps_ddr4_cntrl {BOARD_DDR4_DQS_TO_CK_SKEW_NS} {-0.33}
++set_instance_parameter_value sys_hps_ddr4_cntrl {BOARD_DDR4_MAX_CK_DELAY_NS} {0.5}
++set_instance_parameter_value sys_hps_ddr4_cntrl {BOARD_DDR4_MAX_DQS_DELAY_NS} {0.19}
++set_instance_parameter_value sys_hps_ddr4_cntrl {BOARD_DDR4_SKEW_BETWEEN_DQS_NS} {0.07}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PROTOCOL_ENUM} {PROTOCOL_DDR4}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_MEM_CLK_FREQ_MHZ} {1200}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_DEFAULT_REF_CLK_FREQ} {0}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_HPS_ENABLE_EARLY_RELEASE} {1}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_USER_REF_CLK_FREQ_MHZ} {150}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_BANK_GROUP_WIDTH} {2}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_ALERT_N_PLACEMENT_ENUM} {DDR4_ALERT_N_PLACEMENT_AUTO}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_ALERT_N_DQS_GROUP} {0}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_READ_DBI} {1}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TCL} {16}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_WTCL} {16}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_RTT_NOM_ENUM} {DDR4_RTT_NOM_RZQ_4}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_DEFAULT_IO} {0}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_USER_AC_IO_STD_ENUM} {IO_STD_SSTL_12}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_USER_AC_MODE_ENUM} {OUT_OCT_40_CAL}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_USER_CK_IO_STD_ENUM} {IO_STD_SSTL_12}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_USER_CK_MODE_ENUM} {OUT_OCT_40_CAL}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_USER_DATA_IO_STD_ENUM} {IO_STD_POD_12}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_USER_DATA_OUT_MODE_ENUM} {OUT_OCT_34_CAL}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_USER_DATA_IN_MODE_ENUM} {IN_OCT_120_CAL}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_USER_PLL_REF_CLK_IO_STD_ENUM} {IO_STD_CMOS_12}
++set_instance_parameter_value sys_hps_ddr4_cntrl {PHY_DDR4_USER_RZQ_IO_STD_ENUM} {IO_STD_CMOS_12}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_SPEEDBIN_ENUM} {DDR4_SPEEDBIN_2400}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_DRV_STR_ENUM} {DDR4_DRV_STR_10}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_FORMAT_ENUM} {MEM_FORMAT_DISCRETE}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_ROW_ADDR_WIDTH} {16}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TDQSCK_PS} {175}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TDQSQ_UI} {0.17}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TIH_PS} {87}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TIS_PS} {62}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TQH_UI} {0.74}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TQSH_CYC} {0.4}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TRAS_NS} {32.49}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TRFC_NS} {350.0}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_VDIVW_TOTAL} {130}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TRCD_NS} {13.28}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TRP_NS} {13.28}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TRRD_S_CYC} {4}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TRRD_L_CYC} {6}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TFAW_NS} {23.3}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TWTR_S_CYC} {3}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_TWTR_L_CYC} {9}
++set_instance_parameter_value sys_hps_ddr4_cntrl {MEM_DDR4_LRDIMM_VREFDQ_VALUE} {1D}
++set_instance_parameter_value sys_hps_ddr4_cntrl {DIAG_DDR4_SKIP_CA_DESKEW} {1}
++set_instance_parameter_value sys_hps_ddr4_cntrl {DIAG_DDR4_SKIP_CA_LEVEL} {1}
++set_instance_parameter_value sys_hps_ddr4_cntrl {SHORT_QSYS_INTERFACE_NAMES} {0}
++
++add_interface sys_hps_ddr_rstn reset sink
++set_interface_property sys_hps_ddr_rstn EXPORT_OF sys_hps_ddr4_cntrl.global_reset_reset_sink
++add_connection sys_hps_ddr4_cntrl.hps_emif_conduit_end sys_hps.emif
++add_interface sys_hps_ddr conduit end
++set_interface_property sys_hps_ddr EXPORT_OF sys_hps_ddr4_cntrl.mem_conduit_end
++add_interface sys_hps_ddr_oct conduit end
++set_interface_property sys_hps_ddr_oct EXPORT_OF sys_hps_ddr4_cntrl.oct_conduit_end
++add_interface sys_hps_ddr_ref_clk clock sink
++set_interface_property sys_hps_ddr_ref_clk EXPORT_OF sys_hps_ddr4_cntrl.pll_ref_clk_clock_sink
++
++# cpu/hps handling
++
++proc ad_cpu_interrupt {m_irq m_port} {
++
++  add_connection sys_hps.f2h_irq0 ${m_port}
++  set_connection_parameter_value sys_hps.f2h_irq0/${m_port} irqNumber ${m_irq}
++}
++
++proc ad_cpu_interconnect {m_base m_port} {
++
++  add_connection sys_hps.h2f_lw_axi_master ${m_port}
++  set_connection_parameter_value sys_hps.h2f_lw_axi_master/${m_port} baseAddress ${m_base}
++}
++
++proc ad_dma_interconnect {m_port} {
++
++  add_connection ${m_port} sys_hps.f2sdram0_data
++  set_connection_parameter_value ${m_port}/sys_hps.f2sdram0_data baseAddress {0x0}
++}
++
++proc ad_dma_interconnect_2 {m_port} {
++
++  add_connection ${m_port} sys_hps.f2sdram2_data
++  set_connection_parameter_value ${m_port}/sys_hps.f2sdram2_data baseAddress {0x0}
++}
++
++# gpio-bd
++
++add_instance sys_gpio_bd altera_avalon_pio
++set_instance_parameter_value sys_gpio_bd {direction} {InOut}
++set_instance_parameter_value sys_gpio_bd {generateIRQ} {1}
++set_instance_parameter_value sys_gpio_bd {width} {32}
++
++add_connection sys_clk.clk_reset sys_gpio_bd.reset
++add_connection sys_clk.clk sys_gpio_bd.clk
++add_interface sys_gpio_bd conduit end
++set_interface_property sys_gpio_bd EXPORT_OF sys_gpio_bd.external_connection
++
++# gpio-in
++
++add_instance sys_gpio_in altera_avalon_pio
++set_instance_parameter_value sys_gpio_in {direction} {Input}
++set_instance_parameter_value sys_gpio_in {generateIRQ} {1}
++set_instance_parameter_value sys_gpio_in {width} {32}
++
++add_connection sys_clk.clk_reset sys_gpio_in.reset
++add_connection sys_clk.clk sys_gpio_in.clk
++add_interface sys_gpio_in conduit end
++set_interface_property sys_gpio_in EXPORT_OF sys_gpio_in.external_connection
++
++# gpio-out
++
++add_instance sys_gpio_out altera_avalon_pio
++set_instance_parameter_value sys_gpio_out {direction} {Output}
++set_instance_parameter_value sys_gpio_out {generateIRQ} {0}
++set_instance_parameter_value sys_gpio_out {width} {32}
++
++add_connection sys_clk.clk_reset sys_gpio_out.reset
++add_connection sys_clk.clk sys_gpio_out.clk
++add_interface sys_gpio_out conduit end
++set_interface_property sys_gpio_out EXPORT_OF sys_gpio_out.external_connection
++
++# spi
++
++add_instance sys_spi altera_avalon_spi
++set_instance_parameter_value sys_spi {clockPhase} {0}
++set_instance_parameter_value sys_spi {clockPolarity} {0}
++set_instance_parameter_value sys_spi {dataWidth} {8}
++set_instance_parameter_value sys_spi {masterSPI} {1}
++set_instance_parameter_value sys_spi {numberOfSlaves} {8}
++set_instance_parameter_value sys_spi {targetClockRate} {10000000.0}
++
++add_connection sys_clk.clk_reset sys_spi.reset
++add_connection sys_clk.clk sys_spi.clk
++add_interface sys_spi conduit end
++set_interface_property sys_spi EXPORT_OF sys_spi.external
++
++# system id
++
++add_instance axi_sysid_0 axi_sysid
++add_instance rom_sys_0 sysid_rom
++
++add_connection axi_sysid_0.if_rom_addr rom_sys_0.if_rom_addr
++add_connection rom_sys_0.if_rom_data axi_sysid_0.if_sys_rom_data
++add_connection sys_clk.clk rom_sys_0.if_clk
++add_connection sys_clk.clk axi_sysid_0.s_axi_clock
++add_connection sys_clk.clk_reset axi_sysid_0.s_axi_reset
++
++add_interface pr_rom_data_nc conduit end
++set_interface_property pr_rom_data_nc EXPORT_OF axi_sysid_0.if_pr_rom_data
++
++# base-addresses
++
++ad_cpu_interconnect 0x000000d0 sys_gpio_bd.s1
++ad_cpu_interconnect 0x00000000 sys_gpio_in.s1
++ad_cpu_interconnect 0x00000020 sys_gpio_out.s1
++ad_cpu_interconnect 0x00000040 sys_spi.spi_control_port
++ad_cpu_interconnect 0x00018000 axi_sysid_0.s_axi
++
++# interrupts
++
++ad_cpu_interrupt 5 sys_gpio_in.irq
++ad_cpu_interrupt 6 sys_gpio_bd.irq
++ad_cpu_interrupt 7 sys_spi.irq
++
++# architecture specific global variables
++
++set xcvr_reconfig_addr_width 10
++
+diff --git a/projects/scripts/adi_project_intel.tcl b/projects/scripts/adi_project_intel.tcl
+index 61df074c9..6a2de447d 100644
+--- a/projects/scripts/adi_project_intel.tcl
++++ b/projects/scripts/adi_project_intel.tcl
+@@ -17,7 +17,7 @@ if {[info exists ::env(ADI_IGNORE_VERSION_CHECK)]} {
+ # \param[parameter_list] - a list of global parameters (parameters of the
+ # system_top module)
+ #
+-# Supported carrier names are: a10gx, a10soc, c5soc, de10nano, a5soc, a5gt.
++# Supported carrier names are: a10gx, a10soc, achilles, de10nano, a5soc, a5gt.
+ #
+ proc adi_project {project_name {parameter_list {}}} {
+ 
+@@ -54,6 +54,12 @@ proc adi_project {project_name {parameter_list {}}} {
+     set system_qip_file system_bd/system_bd.qip
+   }
+ 
++  if [regexp "_achilles$" $project_name] {
++    set family "Arria 10"
++    set device 10AS066H2F34I1HG
++    set system_qip_file system_bd/system_bd.qip
++  }
++
+   if [regexp "_s10soc$" $project_name] {
+     set family "Stratix 10"
+     set device 1SX280LU2F50E2VGS2
+-- 
+2.25.1
+

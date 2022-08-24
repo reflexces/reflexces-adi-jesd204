@@ -1,0 +1,596 @@
+From 75f0cd33e80904fc32505f97744945f37f2c786d Mon Sep 17 00:00:00 2001
+From: Dan Negvesky <dnegvesky@reflexces.com>
+Date: Thu, 21 Jul 2022 15:17:49 -0400
+Subject: [PATCH 1/1] add support for daq2 on achilles
+
+Signed-off-by: Dan Negvesky <dnegvesky@reflexces.com>
+---
+ projects/daq2/achilles/Makefile           |  26 ++
+ projects/daq2/achilles/quartus.ini        |   2 +
+ projects/daq2/achilles/system_constr.sdc  |  18 ++
+ projects/daq2/achilles/system_project.tcl | 128 ++++++++
+ projects/daq2/achilles/system_qsys.tcl    |  16 +
+ projects/daq2/achilles/system_top.v       | 346 ++++++++++++++++++++++
+ 6 files changed, 536 insertions(+)
+ create mode 100644 projects/daq2/achilles/Makefile
+ create mode 100644 projects/daq2/achilles/quartus.ini
+ create mode 100644 projects/daq2/achilles/system_constr.sdc
+ create mode 100644 projects/daq2/achilles/system_project.tcl
+ create mode 100644 projects/daq2/achilles/system_qsys.tcl
+ create mode 100644 projects/daq2/achilles/system_top.v
+
+diff --git a/projects/daq2/achilles/Makefile b/projects/daq2/achilles/Makefile
+new file mode 100644
+index 000000000..975c34428
+--- /dev/null
++++ b/projects/daq2/achilles/Makefile
+@@ -0,0 +1,26 @@
++####################################################################################
++## Copyright 2018(c) Analog Devices, Inc.
++## Auto-generated, do not modify!
++####################################################################################
++
++PROJECT_NAME := daq2_achilles
++
++M_DEPS += ../common/daq2_spi.v
++M_DEPS += ../common/daq2_qsys.tcl
++M_DEPS += ../../scripts/adi_pd_intel.tcl
++M_DEPS += ../../common/achilles/achilles_system_qsys.tcl
++M_DEPS += ../../common/achilles/achilles_system_assign.tcl
++M_DEPS += ../../common/achilles/achilles_plddr4_dacfifo_qsys.tcl
++M_DEPS += ../../common/achilles/achilles_plddr4_assign.tcl
++
++LIB_DEPS += axi_dmac
++LIB_DEPS += axi_sysid
++LIB_DEPS += intel/adi_jesd204
++LIB_DEPS += jesd204/ad_ip_jesd204_tpl_adc
++LIB_DEPS += jesd204/ad_ip_jesd204_tpl_dac
++LIB_DEPS += sysid_rom
++LIB_DEPS += util_adcfifo
++LIB_DEPS += util_pack/util_cpack2
++LIB_DEPS += util_pack/util_upack2
++
++include ../../scripts/project-intel.mk
+diff --git a/projects/daq2/achilles/quartus.ini b/projects/daq2/achilles/quartus.ini
+new file mode 100644
+index 000000000..5d51d7ad3
+--- /dev/null
++++ b/projects/daq2/achilles/quartus.ini
+@@ -0,0 +1,2 @@
++disable_lvds_non_dedicated_refclk_error=on
++emif_restrict_hps_refclk_to_ac_tile=off
+diff --git a/projects/daq2/achilles/system_constr.sdc b/projects/daq2/achilles/system_constr.sdc
+new file mode 100644
+index 000000000..7c34c657a
+--- /dev/null
++++ b/projects/daq2/achilles/system_constr.sdc
+@@ -0,0 +1,18 @@
++create_clock -period "40.000 ns"  -name sys_clk_25mhz       [get_ports {sys_clk}]
++#create_clock -period "10.000 ns"  -name sys_clk_100mhz      [get_ports {sys_clk}]
++create_clock -period  "3.000 ns"  -name rx_ref_clk          [get_ports {rx_ref_clk}]
++create_clock -period  "3.000 ns"  -name tx_ref_clk          [get_ports {tx_ref_clk}]
++
++# Asynchronous GPIOs
++
++foreach async_input {adc_fda adc_fdb clkd_status[*] dac_irq gpio_bd_i[*] trig} {
++   set_false_path -from [get_ports $async_input]
++}
++
++foreach async_output {adc_pd clkd_sync dac_reset dac_txen gpio_bd_o[*]} {
++   set_false_path -to [get_ports $async_output]
++}
++derive_pll_clocks
++derive_clock_uncertainty
++
++set_false_path -from [get_registers *altera_reset_synchronizer:alt_rst_sync_uq1|altera_reset_synchronizer_int_chain_out*]
+diff --git a/projects/daq2/achilles/system_project.tcl b/projects/daq2/achilles/system_project.tcl
+new file mode 100644
+index 000000000..3c9142ac8
+--- /dev/null
++++ b/projects/daq2/achilles/system_project.tcl
+@@ -0,0 +1,128 @@
++
++source ../../scripts/adi_env.tcl
++source ../../scripts/adi_project_intel.tcl
++
++adi_project daq2_achilles
++
++source $ad_hdl_dir/projects/common/achilles/achilles_system_assign.tcl
++source $ad_hdl_dir/projects/common/achilles/achilles_plddr4_assign.tcl
++
++# files
++
++set_global_assignment -name VERILOG_FILE ../common/daq2_spi.v
++
++# lane interface
++
++set_location_assignment PIN_P28   -to rx_ref_clk            ; ## B20  FMCA_HPC_GBTCLK1_M2C_P
++set_location_assignment PIN_P27   -to "rx_ref_clk(n)"       ; ## B21  FMCA_HPC_GBTCLK1_M2C_N
++
++set_location_assignment PIN_L30   -to rx_serial_data[0]     ; ## A10  FMCA_HPC_DP3_M2C_P
++set_location_assignment PIN_L29   -to "rx_serial_data[0](n)"; ## A11  FMCA_HPC_DP3_M2C_N
++set_location_assignment PIN_G30   -to rx_serial_data[1]     ; ## C06  FMCA_HPC_DP0_M2C_P
++set_location_assignment PIN_G29   -to "rx_serial_data[1](n)"; ## C07  FMCA_HPC_DP0_M2C_N
++set_location_assignment PIN_K32   -to rx_serial_data[2]     ; ## A06  FMCA_HPC_DP2_M2C_P
++set_location_assignment PIN_K31   -to "rx_serial_data[2](n)"; ## A07  FMCA_HPC_DP2_M2C_N
++set_location_assignment PIN_J30   -to rx_serial_data[3]     ; ## A02  FMCA_HPC_DP1_M2C_P
++set_location_assignment PIN_J29   -to "rx_serial_data[3](n)"; ## A03  FMCA_HPC_DP1_M2C_N
++set_location_assignment PIN_L4    -to rx_sync               ; ## D08  FMCA_HPC_LA01_CC_P
++set_location_assignment PIN_K4    -to "rx_sync(n)"          ; ## D09  FMCA_HPC_LA01_CC_N
++set_location_assignment PIN_J1    -to rx_sysref             ; ## G09  FMCA_HPC_LA03_P
++set_location_assignment PIN_J2    -to "rx_sysref(n)"        ; ## G10  FMCA_HPC_LA03_N
++
++set_location_assignment PIN_AB28  -to tx_ref_clk            ; ## D04  FMCA_HPC_GBTCLK0_M2C_P
++set_location_assignment PIN_AB27  -to "tx_ref_clk(n)"       ; ## D05  FMCA_HPC_GBTCLK0_M2C_N
++
++set_location_assignment PIN_E34   -to tx_serial_data[0]     ; ## A30  FMCA_HPC_DP3_C2M_P (tx_data_p[0])
++set_location_assignment PIN_E33   -to "tx_serial_data[0](n)"; ## A31  FMCA_HPC_DP3_C2M_N (tx_data_n[0])
++set_location_assignment PIN_F32   -to tx_serial_data[1]     ; ## C02  FMCA_HPC_DP0_C2M_P (tx_data_p[3])
++set_location_assignment PIN_F31   -to "tx_serial_data[1](n)"; ## C03  FMCA_HPC_DP0_C2M_N (tx_data_n[3])
++set_location_assignment PIN_C34   -to tx_serial_data[2]     ; ## A26  FMCA_HPC_DP2_C2M_P (tx_data_p[1])
++set_location_assignment PIN_C33   -to "tx_serial_data[2](n)"; ## A27  FMCA_HPC_DP2_C2M_N (tx_data_n[1])
++set_location_assignment PIN_H32   -to tx_serial_data[3]     ; ## A22  FMCA_HPC_DP1_C2M_P (tx_data_p[2])
++set_location_assignment PIN_H31   -to "tx_serial_data[3](n)"; ## A23  FMCA_HPC_DP1_C2M_N (tx_data_n[2])
++set_location_assignment PIN_J4    -to tx_sync               ; ## H07  FMCA_HPC_LA02_P
++set_location_assignment PIN_J5    -to "tx_sync(n)"          ; ## H08  FMCA_HPC_LA02_N
++set_location_assignment PIN_M1    -to tx_sysref             ; ## H10  FMCA_HPC_LA04_P
++set_location_assignment PIN_L1    -to "tx_sysref(n)"        ; ## H11  FMCA_HPC_LA04_N
++
++set_instance_assignment -name IO_STANDARD LVDS -to rx_ref_clk
++set_instance_assignment -name IO_STANDARD LVDS -to "rx_ref_clk(n)"
++set_instance_assignment -name IO_STANDARD "HIGH SPEED DIFFERENTIAL I/O" -to rx_serial_data
++set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to rx_serial_data
++set_instance_assignment -name IO_STANDARD LVDS -to rx_sync
++set_instance_assignment -name IO_STANDARD LVDS -to "rx_sync(n)"
++set_instance_assignment -name IO_STANDARD LVDS -to rx_sysref
++set_instance_assignment -name IO_STANDARD LVDS -to "rx_sysref(n)"
++set_instance_assignment -name INPUT_TERMINATION DIFFERENTIAL -to rx_sysref
++
++set_instance_assignment -name IO_STANDARD LVDS -to tx_ref_clk
++set_instance_assignment -name IO_STANDARD LVDS -to "tx_ref_clk(n)"
++set_instance_assignment -name IO_STANDARD "HIGH SPEED DIFFERENTIAL I/O" -to tx_serial_data
++set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to tx_serial_data
++set_instance_assignment -name IO_STANDARD LVDS -to tx_sync
++set_instance_assignment -name IO_STANDARD LVDS -to "tx_sync(n)"
++set_instance_assignment -name INPUT_TERMINATION DIFFERENTIAL -to tx_sync
++set_instance_assignment -name INPUT_TERMINATION DIFFERENTIAL -to "tx_sync(n)"
++set_instance_assignment -name IO_STANDARD LVDS -to tx_sysref
++set_instance_assignment -name IO_STANDARD LVDS -to "tx_sysref(n)"
++set_instance_assignment -name INPUT_TERMINATION DIFFERENTIAL -to tx_sysref
++set_instance_assignment -name INPUT_TERMINATION DIFFERENTIAL -to "tx_sysref(n)"
++
++# Merge RX and TX into single transceiver
++for {set i 0} {$i < 4} {incr i} {
++  set_instance_assignment -name XCVR_RECONFIG_GROUP xcvr_${i} -to rx_serial_data[${i}]
++  set_instance_assignment -name XCVR_RECONFIG_GROUP xcvr_${i} -to tx_serial_data[${i}]
++}
++
++# gpio
++
++set_location_assignment PIN_M2  -to trig                  ; ## H13  FMCA_LA07_P
++set_location_assignment PIN_M3  -to "trig(n)"             ; ## H14  FMCA_LA07_N
++set_location_assignment PIN_R2  -to adc_fdb               ; ## H17  FMCA_LA11_N
++set_location_assignment PIN_P2  -to adc_fda               ; ## H16  FMCA_LA11_P
++set_location_assignment PIN_R1  -to dac_irq               ; ## G15  FMCA_LA12_P
++set_location_assignment PIN_R4  -to clkd_status[1]        ; ## D18  FMCA_LA13_N
++set_location_assignment PIN_T4  -to clkd_status[0]        ; ## D17  FMCA_LA13_P
++set_location_assignment PIN_L3  -to adc_pd                ; ## C10  FMCA_LA06_P
++set_location_assignment PIN_P1  -to dac_txen              ; ## G16  FMCA_LA12_N
++set_location_assignment PIN_R3  -to dac_reset             ; ## C15  FMCA_LA10_N
++set_location_assignment PIN_N2  -to clkd_sync             ; ## G12  FMCA_LA08_P
++
++set_instance_assignment -name IO_STANDARD LVDS -to trig
++set_instance_assignment -name IO_STANDARD LVDS -to "trig(n)"
++set_instance_assignment -name IO_STANDARD "1.8 V" -to adc_fdb
++set_instance_assignment -name IO_STANDARD "1.8 V" -to adc_fda
++set_instance_assignment -name IO_STANDARD "1.8 V" -to dac_irq
++set_instance_assignment -name IO_STANDARD "1.8 V" -to clkd_status[0]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to clkd_status[1]
++set_instance_assignment -name IO_STANDARD "1.8 V" -to adc_pd
++set_instance_assignment -name IO_STANDARD "1.8 V" -to dac_txen
++set_instance_assignment -name IO_STANDARD "1.8 V" -to dac_reset
++set_instance_assignment -name IO_STANDARD "1.8 V" -to clkd_sync
++
++# spi
++
++set_location_assignment PIN_N4  -to spi_csn_clk           ; ## D11  FMCA_LA05_P
++set_location_assignment PIN_T3  -to spi_csn_dac           ; ## C14  FMCA_LA10_P
++set_location_assignment PIN_P5  -to spi_csn_adc           ; ## D15  FMCA_LA09_N
++set_location_assignment PIN_N5  -to spi_clk               ; ## D12  FMCA_LA05_N
++set_location_assignment PIN_P4  -to spi_sdio              ; ## D14  FMCA_LA09_P
++set_location_assignment PIN_N3  -to spi_dir               ; ## G13  FMCA_LA08_N
++
++set_instance_assignment -name IO_STANDARD "1.8 V" -to spi_csn_clk
++set_instance_assignment -name IO_STANDARD "1.8 V" -to spi_csn_dac
++set_instance_assignment -name IO_STANDARD "1.8 V" -to spi_csn_adc
++set_instance_assignment -name IO_STANDARD "1.8 V" -to spi_clk
++set_instance_assignment -name IO_STANDARD "1.8 V" -to spi_sdio
++set_instance_assignment -name IO_STANDARD "1.8 V" -to spi_dir
++
++# set optimization to get a better timing closure
++set_global_assignment -name OPTIMIZATION_MODE "HIGH PERFORMANCE EFFORT"
++
++# enable Early I/O release as enabled in default Achilles u-boot release
++set_global_assignment -name HPS_EARLY_IO_RELEASE ON
++
++execute_flow -compile
++
++# generate split RBF files
++execute_module -tool cpf -args "--convert --hps -o bitstream_compression=on daq2_achilles.sof daq2_achilles.rbf"
+diff --git a/projects/daq2/achilles/system_qsys.tcl b/projects/daq2/achilles/system_qsys.tcl
+new file mode 100644
+index 000000000..25e253b39
+--- /dev/null
++++ b/projects/daq2/achilles/system_qsys.tcl
+@@ -0,0 +1,16 @@
++
++set dac_fifo_address_width 10
++
++source $ad_hdl_dir/projects/scripts/adi_pd_intel.tcl
++source $ad_hdl_dir/projects/common/achilles/achilles_system_qsys.tcl
++source $ad_hdl_dir/projects/common/achilles/achilles_plddr4_dacfifo_qsys.tcl
++source ../common/daq2_qsys.tcl
++
++#system ID
++set_instance_parameter_value axi_sysid_0 {ROM_ADDR_BITS} {9}
++set_instance_parameter_value rom_sys_0 {ROM_ADDR_BITS} {9}
++
++set_instance_parameter_value rom_sys_0 {PATH_TO_FILE} "[pwd]/mem_init_sys.txt"
++
++sysid_gen_sys_init_file;
++
+diff --git a/projects/daq2/achilles/system_top.v b/projects/daq2/achilles/system_top.v
+new file mode 100644
+index 000000000..6032ccc3e
+--- /dev/null
++++ b/projects/daq2/achilles/system_top.v
+@@ -0,0 +1,346 @@
++// ***************************************************************************
++// ***************************************************************************
++// Copyright 2014 - 2017 (c) Analog Devices, Inc. All rights reserved.
++//
++// In this HDL repository, there are many different and unique modules, consisting
++// of various HDL (Verilog or VHDL) components. The individual modules are
++// developed independently, and may be accompanied by separate and unique license
++// terms.
++//
++// The user should read each of these license terms, and understand the
++// freedoms and responsibilities that he or she has by using this source/core.
++//
++// This core is distributed in the hope that it will be useful, but WITHOUT ANY
++// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
++// A PARTICULAR PURPOSE.
++//
++// Redistribution and use of source or resulting binaries, with or without modification
++// of this file, are permitted under one of the following two license terms:
++//
++//   1. The GNU General Public License version 2 as published by the
++//      Free Software Foundation, which can be found in the top level directory
++//      of this repository (LICENSE_GPL2), and also online at:
++//      <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>
++//
++// OR
++//
++//   2. An ADI specific BSD license, which can be found in the top level directory
++//      of this repository (LICENSE_ADIBSD), and also on-line at:
++//      https://github.com/analogdevicesinc/hdl/blob/master/LICENSE_ADIBSD
++//      This will allow to generate bit files and not release the source code,
++//      as long as it attaches to an ADI device.
++//
++// ***************************************************************************
++// ***************************************************************************
++
++`timescale 1ns/100ps
++
++module system_top (
++
++  // clock and resets
++
++  input             sys_clk,
++  input             sys_resetn,
++
++  // hps-ddr4 (32)
++
++  input             hps_ddr_ref_clk,
++  output  [  0:0]   hps_ddr_clk_p,
++  output  [  0:0]   hps_ddr_clk_n,
++  output  [ 16:0]   hps_ddr_a,
++  output  [  1:0]   hps_ddr_ba,
++  output  [  1:0]   hps_ddr_bg,
++  output  [  0:0]   hps_ddr_cke,
++  output  [  0:0]   hps_ddr_cs_n,
++  output  [  0:0]   hps_ddr_odt,
++  output  [  0:0]   hps_ddr_reset_n,
++  output  [  0:0]   hps_ddr_act_n,
++  output  [  0:0]   hps_ddr_par,
++  input   [  0:0]   hps_ddr_alert_n,
++  inout   [  3:0]   hps_ddr_dqs_p,
++  inout   [  3:0]   hps_ddr_dqs_n,
++  inout   [ 31:0]   hps_ddr_dq,
++  inout   [  3:0]   hps_ddr_dbi_n,
++  input             hps_ddr_rzq,
++
++  // pl-ddr4
++
++  input             sys_ddr_ref_clk,
++  output  [  0:0]   sys_ddr_clk_p,
++  output  [  0:0]   sys_ddr_clk_n,
++  output  [ 16:0]   sys_ddr_a,
++  output  [  1:0]   sys_ddr_ba,
++  output  [  1:0]   sys_ddr_bg,
++  output  [  0:0]   sys_ddr_cke,
++  output  [  0:0]   sys_ddr_cs_n,
++  output  [  0:0]   sys_ddr_odt,
++  output  [  0:0]   sys_ddr_reset_n,
++  output  [  0:0]   sys_ddr_act_n,
++  output  [  0:0]   sys_ddr_par,
++  input   [  0:0]   sys_ddr_alert_n,
++  inout   [  3:0]   sys_ddr_dqs_p,
++  inout   [  3:0]   sys_ddr_dqs_n,
++  inout   [ 31:0]   sys_ddr_dq,
++  inout   [  3:0]   sys_ddr_dbi_n,
++  input             sys_ddr_rzq,
++
++  // hps-ethernet
++
++  input   [  0:0]   hps_eth_rxclk,
++  input   [  0:0]   hps_eth_rxctl,
++  input   [  3:0]   hps_eth_rxd,
++  output  [  0:0]   hps_eth_txclk,
++  output  [  0:0]   hps_eth_txctl,
++  output  [  3:0]   hps_eth_txd,
++  output  [  0:0]   hps_eth_mdc,
++  inout   [  0:0]   hps_eth_mdio,
++
++  // hps-sdio
++
++  output  [  0:0]   hps_sdio_clk,
++  inout   [  0:0]   hps_sdio_cmd,
++  inout   [  7:0]   hps_sdio_d,
++
++  // hps-usb
++
++  input   [  0:0]   hps_usb_clk,
++  input   [  0:0]   hps_usb_dir,
++  input   [  0:0]   hps_usb_nxt,
++  output  [  0:0]   hps_usb_stp,
++  inout   [  7:0]   hps_usb_d,
++
++  // hps-uart
++
++  input   [  0:0]   hps_uart_rx,
++  output  [  0:0]   hps_uart_tx,
++  input   [  0:0]   hps_uart_cts_n,
++  output  [  0:0]   hps_uart_rts_n,
++
++  // hps-i2c (shared w fmc-a, fmc-b)
++
++  inout   [  0:0]   hps_i2c_sda,
++  inout   [  0:0]   hps_i2c_scl,
++
++  // hps-gpio (max-v-u16)
++
++  inout   [  1:0]   hps_gpio,
++
++  // gpio (max-v-u21)
++
++  input   [  7:0]   gpio_bd_i,
++  output  [  3:0]   gpio_bd_o,
++
++  // lane interface
++
++  input                   rx_ref_clk,
++  input                   rx_sysref,
++  output                  rx_sync,
++  input       [ 3:0]      rx_serial_data,
++  input                   tx_ref_clk,
++  input                   tx_sysref,
++  input                   tx_sync,
++  output      [ 3:0]      tx_serial_data,
++
++  // gpio
++
++  input                   trig,
++  input                   adc_fdb,
++  input                   adc_fda,
++  input                   dac_irq,
++  input       [ 1:0]      clkd_status,
++  output                  adc_pd,
++  output                  dac_txen,
++  output                  dac_reset,
++  output                  clkd_sync,
++
++  // spi
++
++  output                  spi_csn_clk,
++  output                  spi_csn_dac,
++  output                  spi_csn_adc,
++  output                  spi_clk,
++  inout                   spi_sdio,
++  output                  spi_dir);
++
++  // internal signals
++
++  wire              sys_ddr_cal_success;
++  wire              sys_ddr_cal_fail;
++  wire              sys_hps_resetn;
++  wire              sys_resetn_s;
++  wire    [ 63:0]   gpio_i;
++  wire    [ 63:0]   gpio_o;
++  wire              spi_miso_s;
++  wire              spi_mosi_s;
++  wire    [  7:0]   spi_csn_s;
++  wire              dac_fifo_bypass;
++
++  // assignments
++
++  assign spi_csn_adc = spi_csn_s[2];
++  assign spi_csn_dac = spi_csn_s[1];
++  assign spi_csn_clk = spi_csn_s[0];
++
++
++  daq2_spi i_daq2_spi (
++    .spi_csn (spi_csn_s[2:0]),
++    .spi_clk (spi_clk),
++    .spi_mosi (spi_mosi_s),
++    .spi_miso (spi_miso_s),
++    .spi_sdio (spi_sdio),
++    .spi_dir (spi_dir));
++
++  // gpio in & out are separate cores
++
++  assign gpio_i[63:45] = gpio_o[63:45];
++  assign dac_fifo_bypass = gpio_o[44];
++  assign gpio_i[44:44] = gpio_o[44:44];
++  assign gpio_i[43:43] = trig;
++
++  assign gpio_i[42:40] = gpio_o[42:40];
++  assign adc_pd = gpio_o[42];
++  assign dac_txen = gpio_o[41];
++  assign dac_reset = gpio_o[40];
++
++  assign gpio_i[39:39] = gpio_o[39:39];
++
++  assign gpio_i[38:38] = gpio_o[38:38];
++  assign clkd_sync = gpio_o[38];
++
++  assign gpio_i[37:37] = gpio_o[37:37];
++  assign gpio_i[36:36] = adc_fdb;
++  assign gpio_i[35:35] = adc_fda;
++  assign gpio_i[34:34] = dac_irq;
++  assign gpio_i[33:32] = clkd_status;
++
++  // board stuff (max-v-u21)
++
++  assign gpio_i[31:12] = gpio_o[31:12];
++  assign gpio_i[11: 4] = gpio_bd_i;
++  assign gpio_i[ 3: 0] = gpio_o[ 3: 0];
++
++  assign gpio_bd_o = gpio_o[3:0];
++
++  // peripheral reset
++
++  //assign sys_resetn_s = sys_resetn & sys_hps_resetn;
++  // DNE: invert sys_resetn (coming from active high hps_rst on achilles)
++  assign sys_resetn_s = !(sys_resetn) & sys_hps_resetn;
++
++  // instantiations
++
++  system_bd i_system_bd (
++    .sys_clk_clk (sys_clk),
++    .sys_ddr_mem_mem_ck (sys_ddr_clk_p),
++    .sys_ddr_mem_mem_ck_n (sys_ddr_clk_n),
++    .sys_ddr_mem_mem_a (sys_ddr_a),
++    .sys_ddr_mem_mem_act_n (sys_ddr_act_n),
++    .sys_ddr_mem_mem_ba (sys_ddr_ba),
++    .sys_ddr_mem_mem_bg (sys_ddr_bg),
++    .sys_ddr_mem_mem_cke (sys_ddr_cke),
++    .sys_ddr_mem_mem_cs_n (sys_ddr_cs_n),
++    .sys_ddr_mem_mem_odt (sys_ddr_odt),
++    .sys_ddr_mem_mem_reset_n (sys_ddr_reset_n),
++    .sys_ddr_mem_mem_par (sys_ddr_par),
++    .sys_ddr_mem_mem_alert_n (sys_ddr_alert_n),
++    .sys_ddr_mem_mem_dqs (sys_ddr_dqs_p),
++    .sys_ddr_mem_mem_dqs_n (sys_ddr_dqs_n),
++    .sys_ddr_mem_mem_dq (sys_ddr_dq),
++    .sys_ddr_mem_mem_dbi_n (sys_ddr_dbi_n),
++    .sys_ddr_oct_oct_rzqin (sys_ddr_rzq),
++    .sys_ddr_ref_clk_clk (sys_ddr_ref_clk),
++    .sys_ddr_status_local_cal_success (sys_ddr_cal_success),
++    .sys_ddr_status_local_cal_fail (sys_ddr_cal_fail),
++    .sys_gpio_bd_in_port (gpio_i[31:0]),
++    .sys_gpio_bd_out_port (gpio_o[31:0]),
++    .sys_gpio_in_export (gpio_i[63:32]),
++    .sys_gpio_out_export (gpio_o[63:32]),
++    .pr_rom_data_nc_rom_data('h0),
++    .sys_hps_ddr_mem_ck (hps_ddr_clk_p),
++    .sys_hps_ddr_mem_ck_n (hps_ddr_clk_n),
++    .sys_hps_ddr_mem_a (hps_ddr_a),
++    .sys_hps_ddr_mem_act_n (hps_ddr_act_n),
++    .sys_hps_ddr_mem_ba (hps_ddr_ba),
++    .sys_hps_ddr_mem_bg (hps_ddr_bg),
++    .sys_hps_ddr_mem_cke (hps_ddr_cke),
++    .sys_hps_ddr_mem_cs_n (hps_ddr_cs_n),
++    .sys_hps_ddr_mem_odt (hps_ddr_odt),
++    .sys_hps_ddr_mem_reset_n (hps_ddr_reset_n),
++    .sys_hps_ddr_mem_par (hps_ddr_par),
++    .sys_hps_ddr_mem_alert_n (hps_ddr_alert_n),
++    .sys_hps_ddr_mem_dqs (hps_ddr_dqs_p),
++    .sys_hps_ddr_mem_dqs_n (hps_ddr_dqs_n),
++    .sys_hps_ddr_mem_dq (hps_ddr_dq),
++    .sys_hps_ddr_mem_dbi_n (hps_ddr_dbi_n),
++    .sys_hps_ddr_oct_oct_rzqin (hps_ddr_rzq),
++    .sys_hps_ddr_ref_clk_clk (hps_ddr_ref_clk),
++    //.sys_hps_ddr_rstn_reset_n (sys_resetn),
++    // DNE: invert sys_resetn (coming from active high hps_rst on achilles)
++    .sys_hps_ddr_rstn_reset_n (!sys_resetn),
++    .sys_hps_io_hps_io_phery_emac1_TX_CLK (hps_eth_txclk),
++    .sys_hps_io_hps_io_phery_emac1_TXD0 (hps_eth_txd[0]),
++    .sys_hps_io_hps_io_phery_emac1_TXD1 (hps_eth_txd[1]),
++    .sys_hps_io_hps_io_phery_emac1_TXD2 (hps_eth_txd[2]),
++    .sys_hps_io_hps_io_phery_emac1_TXD3 (hps_eth_txd[3]),
++    .sys_hps_io_hps_io_phery_emac1_RX_CTL (hps_eth_rxctl),
++    .sys_hps_io_hps_io_phery_emac1_TX_CTL (hps_eth_txctl),
++    .sys_hps_io_hps_io_phery_emac1_RX_CLK (hps_eth_rxclk),
++    .sys_hps_io_hps_io_phery_emac1_RXD0 (hps_eth_rxd[0]),
++    .sys_hps_io_hps_io_phery_emac1_RXD1 (hps_eth_rxd[1]),
++    .sys_hps_io_hps_io_phery_emac1_RXD2 (hps_eth_rxd[2]),
++    .sys_hps_io_hps_io_phery_emac1_RXD3 (hps_eth_rxd[3]),
++    .sys_hps_io_hps_io_phery_emac1_MDIO (hps_eth_mdio),
++    .sys_hps_io_hps_io_phery_emac1_MDC (hps_eth_mdc),
++    .sys_hps_io_hps_io_phery_sdmmc_CMD (hps_sdio_cmd),
++    .sys_hps_io_hps_io_phery_sdmmc_D0 (hps_sdio_d[0]),
++    .sys_hps_io_hps_io_phery_sdmmc_D1 (hps_sdio_d[1]),
++    .sys_hps_io_hps_io_phery_sdmmc_D2 (hps_sdio_d[2]),
++    .sys_hps_io_hps_io_phery_sdmmc_D3 (hps_sdio_d[3]),
++    .sys_hps_io_hps_io_phery_sdmmc_D4 (hps_sdio_d[4]),
++    .sys_hps_io_hps_io_phery_sdmmc_D5 (hps_sdio_d[5]),
++    .sys_hps_io_hps_io_phery_sdmmc_D6 (hps_sdio_d[6]),
++    .sys_hps_io_hps_io_phery_sdmmc_D7 (hps_sdio_d[7]),
++    .sys_hps_io_hps_io_phery_sdmmc_CCLK (hps_sdio_clk),
++    .sys_hps_io_hps_io_phery_usb1_DATA0 (hps_usb_d[0]),
++    .sys_hps_io_hps_io_phery_usb1_DATA1 (hps_usb_d[1]),
++    .sys_hps_io_hps_io_phery_usb1_DATA2 (hps_usb_d[2]),
++    .sys_hps_io_hps_io_phery_usb1_DATA3 (hps_usb_d[3]),
++    .sys_hps_io_hps_io_phery_usb1_DATA4 (hps_usb_d[4]),
++    .sys_hps_io_hps_io_phery_usb1_DATA5 (hps_usb_d[5]),
++    .sys_hps_io_hps_io_phery_usb1_DATA6 (hps_usb_d[6]),
++    .sys_hps_io_hps_io_phery_usb1_DATA7 (hps_usb_d[7]),
++    .sys_hps_io_hps_io_phery_usb1_CLK (hps_usb_clk),
++    .sys_hps_io_hps_io_phery_usb1_STP (hps_usb_stp),
++    .sys_hps_io_hps_io_phery_usb1_DIR (hps_usb_dir),
++    .sys_hps_io_hps_io_phery_usb1_NXT (hps_usb_nxt),
++    .sys_hps_io_hps_io_phery_uart0_RX (hps_uart_rx),
++    .sys_hps_io_hps_io_phery_uart0_TX (hps_uart_tx),
++    .sys_hps_io_hps_io_phery_uart0_CTS_N (hps_uart_cts_n),
++    .sys_hps_io_hps_io_phery_uart0_RTS_N (hps_uart_rts_n),
++    .sys_hps_io_hps_io_phery_i2c0_SDA (hps_i2c_sda),
++    .sys_hps_io_hps_io_phery_i2c0_SCL (hps_i2c_scl),
++    .sys_hps_io_hps_io_gpio_gpio2_io12 (hps_gpio[0]),
++    .sys_hps_io_hps_io_gpio_gpio2_io13 (hps_gpio[1]),
++    .sys_hps_out_rstn_reset_n (sys_hps_resetn),
++    //.sys_hps_rstn_reset_n (sys_resetn),
++    // DNE: invert sys_resetn (coming from active high hps_rst on achilles)
++    .sys_hps_rstn_reset_n (!sys_resetn),
++    .sys_rstn_reset_n (sys_resetn_s),
++    .sys_spi_MISO (spi_miso_s),
++    .sys_spi_MOSI (spi_mosi_s),
++    .sys_spi_SCLK (spi_clk),
++    .sys_spi_SS_n (spi_csn_s),
++    .tx_serial_data_tx_serial_data (tx_serial_data),
++    .tx_fifo_bypass_bypass (dac_fifo_bypass),
++    .tx_ref_clk_clk (tx_ref_clk),
++    .tx_sync_export (tx_sync),
++    .tx_sysref_export (tx_sysref),
++    .rx_serial_data_rx_serial_data (rx_serial_data),
++    .rx_ref_clk_clk (rx_ref_clk),
++    .rx_sync_export (rx_sync),
++    .rx_sysref_export (rx_sysref));
++
++endmodule
++
++// ***************************************************************************
++// ***************************************************************************
+-- 
+2.25.1
+
