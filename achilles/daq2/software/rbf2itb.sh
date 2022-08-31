@@ -11,11 +11,19 @@ cp $HDL_BUILD_DIR/daq2_achilles.core.rbf $UBOOT_DIR
 
 cd $UBOOT_DIR
 
-tools/mkimage -E -f daq2_fit_spl_fpga_periph_only.its fit_spl_fpga_periph_only.itb 
-tools/mkimage -E -f daq2_fit_spl_fpga.its fit_spl_fpga.itb
+if [ ! -f board/reflexces/achilles-turbo/daq2_fit_spl_fpga_periph_only.its ]; then
+    wget -P board/reflexces/achilles-turbo https://raw.githubusercontent.com/reflexces/reflexces-adi-jesd204/master/achilles/daq2/software/daq2_fit_spl_fpga_periph_only.its
+fi
 
-# copy the ITB files back over to the ADI hdl build directory
-# they get overwritten in the u-boot directory each time we run mkimage,
+if [ ! -f board/reflexces/achilles-turbo/daq2_fit_spl_fpga.its ]; then
+    wget -P board/reflexces/achilles-turbo https://raw.githubusercontent.com/reflexces/reflexces-adi-jesd204/master/achilles/daq2/software/daq2_fit_spl_fpga.its
+fi
+
+tools/mkimage -E -f board/reflexces/achilles-turbo/daq2_fit_spl_fpga_periph_only.its fit_spl_fpga_periph_only.itb
+tools/mkimage -E -f board/reflexces/achilles-turbo/daq2_fit_spl_fpga.its fit_spl_fpga.itb
+
+# Copy the ITB files back over to the ADI hdl build directory.
+# They get overwritten in the u-boot directory each time we run mkimage,
 # so this creates a backup in the hdl project directory
-cp $UBOOT_DIR/daq2_fit_spl_fpga_periph_only.itb $HDL_BUILD_DIR
-cp $UBOOT_DIR/daq2_fit_spl_fpga.itb $HDL_BUILD_DIR
+cp $UBOOT_DIR/fit_spl_fpga_periph_only.itb $HDL_BUILD_DIR
+cp $UBOOT_DIR/fit_spl_fpga.itb $HDL_BUILD_DIR
