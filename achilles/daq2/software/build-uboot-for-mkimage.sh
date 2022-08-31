@@ -12,7 +12,7 @@ rm gcc-arm-11.2-2022.02-x86_64-arm-none-linux-gnueabihf.tar.xz
 
 printf "\n\nSetting environment variables...\n\n"
 export ARCH=arm 
-export CROSS_COMPILE=~/linaro/gcc-arm-10.2-2020.11-x86_64-arm-none-linux-gnueabihf/bin/arm-none-linux-gnueabihf- 
+export CROSS_COMPILE=$PWD/gcc-arm-11.2-2022.02-x86_64-arm-none-linux-gnueabihf/bin/arm-none-linux-gnueabihf- 
 
 printf "\n\nCloning U-Boot repository...\n\n"
 git clone https://github.com/altera-opensource/u-boot-socfpga 
