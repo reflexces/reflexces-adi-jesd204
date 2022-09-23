@@ -21,7 +21,11 @@ There are numerous ADI Reference Designs available to support multiple ADI FMC e
 
 -[ADI HDL Reference Designs List](https://wiki.analog.com/resources/fpga/docs/hdl)
 
+-[Porting ADI's HDL reference designs](https://wiki.analog.com/resources/fpga/docs/hdl/porting_project_quick_start_guide)
+
 -[ADI github repository information](https://wiki.analog.com/resources/fpga/docs/git)
+
+-[DAQ2 HDL Project for Altera](https://wiki.analog.com/resources/fpga/peripherals/jesd204/tutorial/hdl_altera#transceiver_reconfiguration)
 
 The HDL repository contains branches that are tested with specific versions of FPGA vendor tools.  At the time this work was started to support the first test board (DAQ2) on Achilles, the latest stable branch was **hdl_2019_r2** and should be used with **Quartus Prime Pro v19.3**.  You should have this version installed before attempting to follow the HDL project build instructions below.  For more information, view the [ADI Release information page](https://wiki.analog.com/resources/fpga/docs/releases).
 
