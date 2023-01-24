@@ -1,6 +1,6 @@
 ## REFLEX CES board support for ADI JESD204B Framework
 
-This repository contains instructions, scripts, and other files for working with supported ADI JESD204B Data Converter FMC cards on REFLEX CES boards.  It is currently intended for REFELEX CES internal use only (development & debug).  No customer support will be provided at this time.
+This repository contains instructions, scripts, and other files for working with supported ADI JESD204B Data Converter FMC cards on REFLEX CES boards.
 
 ADI boards and REFLEX CES carrier boards currently supported:
 
@@ -39,11 +39,13 @@ There are 2 main components required to support any given ADI board on a carrier
 1. FPGA HDL design
 2. Software (U-Boot, Linux kernel, devicetree, drivers, root filesystem)
 
-### Building the FPGA HDL Design 
+### Building the FPGA HDL Design
 
 Note: all HDL development work to support Achilles was done on a Linux host (Ubuntu 20.04). It is possible to work in Windows if necessary, but Quartus tool setup instructions are not provided here.  Further, other software build tasks can only be done in a Linux environment; therefore it is recommended to do all work in Linux.  The Achilles Turbo SOM was used for development.  Achilles Indus SOM may work but has not been tested.  Achilles Lite SOM is not possible due to top FMC connectors not being installed.
 
 For any carrier board that is not officially supported and maintained by ADI (including Achilles), a supported ADI design should be used as a baseline example for manually porting the design to the new carrier.  The Intel Arria 10 SoC Dev Kit (referred to as "a10soc" in the project list) was used as the example for porting to Achilles.  Refer to the [Porting ADI's HDL reference designs](https://wiki.analog.com/resources/fpga/docs/hdl/porting_project_quick_start_guide) wiki page for additional details.
+
+The DAQ2 reference design running on Achilles is currently limited to 5 Gbps data rate on the JESD204B links.
 
 Patch files and scripts are provided in this repository to add the files required to support the Achilles SOM.  To build the Quartus project for the DAQ2 board on Achilles SOM as carrier, open a terminal window and run the commands **exactly** as shown in the steps below:
 
@@ -64,6 +66,12 @@ After the Quartus project build finishes successfully (you will see green "OK"),
 ```
 cd $HOME/adi-jesd204b
 ```
+
+### Update Achilles MAX 10 System Controller
+
+The Achilles SOM includes a MAX 10 device used as a System Controller to perform board management fuctions.  One of those functions is to load the Skyworks Si5341 programmable PLL clock generator settings over the I2C bus after board power up.  In the factory default configuration, the both the HPS and FPGA DDR4 controllers are set to operate from a 150 MHz clock to support 2400 MT/s operation.  In order to meet DDR4 timing in the DAQ2 FPGA reference design, it is necessary to reduce the DDR4 clock to 133 MHz.  A pre-compiled .pof file that sets the DDR4 FPGA clock to 133 MHz is provided in the repository in the **achilles/daq2/prog_files** folder. Using the Quartus Programmer GUI or command line, update the MAX 10 device's configuration flash using this new .pof file.  If necessary, refer to the **Achilles Reference Manaul** found in the Achilles BSP Documentation folder for detailed instructions on programming the MAX 10 device.
+
+To reset the MAX 10 System Controller configuration back to the factory default, refer to the **FPGA Factory Restore** chapter of the **Achilles Reference Manual**.
 
 ### Building the Software Components
 
@@ -138,7 +146,7 @@ The pre-built ADI rootfs would be the ideal solution since it contains all of th
 
 ### Updating the Achilles eMMC
 
-To update the eMMC flash on Achilles, follow instructions on the Achilles rocketboards.org page (PROGRAM EMMC button at the top of page).  You can use the eMMC programming script or perform the steps manually if preferred.  The Achilles SOM must be connected to the local network using the Ethernet port and a TFTP server must already be setup to being to update the eMMC.  The recommended order of operation is as follows:
+To update the eMMC flash on Achilles, follow instructions on the [Achilles rocketboards.org page](https://www.rocketboards.org/foswiki/Documentation/REFLEXCESAchillesArria10SoCSOM) (PROGRAM EMMC button at the top of page).  You can use the eMMC programming script or perform the steps manually if preferred.  The Achilles SOM must be connected to the local network using the Ethernet port and a TFTP server must already be setup to being to update the eMMC.  The recommended order of operation is as follows:
 
 1. Program the latest released Achilles Turbo WIC image to the eMMC on the Turbo SOM.
 2. Connect to the SOM using PuTTY or Minicom and the boot to the Linux prompt.
@@ -180,9 +188,7 @@ Next, enter the **poweroff** command at the Achilles SOM Linux prompt and then p
 
 ### Launching the Demo with IIO Oscilloscope
 
-NOTE: There is no need to install or run IIO Oscilloscope until the JESD links are debugged and running on Achilles.
-
-IIO Oscilloscope is an ADI GUI application use for plotting captured data from various FMC evaluation boards.  It can run under Windows or Linux.  The Windows installation uses a self-extracting installer and is fast and easy to setup.  The Linux installation requires building the source code.
+IIO Oscilloscope is an ADI GUI application used for plotting captured data from various FMC evaluation boards.  It can run under Windows or Linux.  The Windows installation uses a self-extracting installer and is fast and easy to setup.  The Linux installation requires compiling the source code.
 
 To install and run under Windows:
 1. Download the installer file **adi-osc-setup.exe** from the [ADI IIO Oscilloscope github page](https://github.com/analogdevicesinc/iio-oscilloscope/releases/tag/v0.14-master).
@@ -191,17 +197,31 @@ To install and run under Windows:
 
 To install and run under Linux, follow these [instructions](https://wiki.analog.com/resources/tools-software/linux-software/iio_oscilloscope#installation).
 
-Details about launching the application, setup, and use can also be found at the instructions link above.
+Additional details about launching the application, setup, and use can be found at the instructions link above.
 
-### Debugging Resources
-
-After successfully updating the eMMC with WIC image and additional generated files as described in previous steps, we can boot the SOM with the new files which will load the ADI DAQ2 FPGA design and ADI kernel and devicetree.  Once you reach the Linux prompt, scroll back through the boot messages to observe the current errors.
-
-Refer to ADI Engineer Zone support request [JESD204 link failures with DAQ2 on custom Arria 10 board](https://ez.analog.com/linux-software-drivers/f/q-a/560995/jesd204-link-failures-with-daq2-on-custom-arria-10-board) for problem history and suggested workaround to update the devicetree with an entry the allows the errors to be ignored.
-
-###### DAQ2 AD9523 PLL Clock Settings
-It may be necessary to change the transceiver data rate and other PLL clock rates.  Refer to this link below for information on how the clocks are configured from the devicetree.
-[AD-FMCDAQ2-EBZ Clocking](https://wiki.analog.com/resources/eval/user-guides/ad-fmcdaq2-ebz/clocking)
+Follow these steps to start the demo on Achilles:
+1. Ensure that the Achilles SOM is set for the HPS to configure the FPGA in FPP x32 mode by setting the MSEL switch on the back of the Achilles SOM to the **ON** position.
+2. Plug the DAQ2 board into the Achilles HPC FMC connector as shown in the image below.
+![Achilles with DAQ2](/images/achilles-with-DAQ2.jpg)
+3. Connect the RF loopback cables on the DAQ2 as shown in the image above.
+4. Plug in the USB cable between your PC and the USB connector labeled **BLASTER** on the Achilles Carrier board.
+5. Plug in an Ethernet cable between your network router and the **ETH1** RJ-45 connector on the Achilles Carrier board.
+6. Plug in the power supply from the AC adapter to the Achilles Carrier board.  Plug in the other end of the power supply to AC power source.
+7. Power on the Achilles SOM + Carrier board + DAQ2 assembled system.
+8. Open your preferred terminal emulation software (PuTTY, minicom, Tera Term, etc.) and establish a connection with the Achilles SOM to monitor boot progress.
+9. When you reach the Linux prompt, login with username **root** (no password required).
+10. Find the IP address assigned to the Achilles SOM by entering the command **ifconfig** at the Linux prompt in your terminal program.  In the example shown here, we are using IP address **192.168.1.125**.
+11. Launch the **IIO Oscilloscope** software.
+12. When the osc.exe **IIO Oscilloscope Connection** window opens, select the **Manual** option, then enter the IP address of your Achilles in the **URI:** box, for example **ip: 192.168.1.125**.  Note the **ip:** preceeding the IP address.  Next click the **Refresh** button.
+![Connection Settings](/images/osc.exe_setup.png)
+13. When successfully connected, you should see information displayed in the white boxes as shown below.
+![successful Connection](/images/connect.png)
+14. On the **ADI IIO Oscilloscope** window, select the **DAQ1/2/3** tab and **Controls** sub-tab.  Change the **DSS Mode** to **Independent I/Q Control**.  Set the I/Q Tone Frequencies as shown in the image below, or experiment with other values.
+![DSS Mode](/images/dss_setup.png)
+15. In the **ADI IIO Oscilloscope - Capture1** window, check the box next to **voltage0**, select **Time Domain** under **Plot Type**, then click the "Play" button to begin capture.  To stop the capture, press the red "X" button.
+![Time Domain Capture](/images/time_domain.png)
+16. After the Time Domain capture is stopped, change the **Plot Type** to **Frequency Domain**, then click the "Play" button to begin capture.  To stop the capture, press the red "X" button.  You can experiment with various **Plot Type** settings.  Right click in the plot window to enable **Peak Markers**.
+![Frequency Domain Capture](/images/freq_domain.png)
 
 ###### iio_info
 This utility is useful for reading data from IIO devices (DACs, ADCs, sensors, PLLs, etc) and is part of the Libiio package (currently included by default in the latest Achilles Yocto Poky console image).
@@ -213,7 +233,7 @@ More info on the [Linux Industrial I/O Subsystem](https://wiki.analog.com/softwa
 
 ###### JESD204B Status
 [JESD204B Status Utility](https://wiki.analog.com/resources/tools-software/linux-software/jesd_status)
-This utility is provided with the ADI Kuiper root filesystem (which has not been successfully booted on Achilles yet).
+This utility is provided with the ADI Kuiper root filesystem.
 A version of Yocto Poky rootfs (honister) with this utility compiled is available upon request.
 Otherwise, similar information can be obtained by running the following command at the Achilles Poky Linux prompt:
 ```
