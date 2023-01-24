@@ -223,6 +223,8 @@ Follow these steps to start the demo on Achilles:
 16. After the Time Domain capture is stopped, change the **Plot Type** to **Frequency Domain**, then click the "Play" button to begin capture.  To stop the capture, press the red "X" button.  You can experiment with various **Plot Type** settings.  Right click in the plot window to enable **Peak Markers**.
 ![Frequency Domain Capture](/images/freq_domain.png)
 
+### Debugging Resources
+
 ###### iio_info
 This utility is useful for reading data from IIO devices (DACs, ADCs, sensors, PLLs, etc) and is part of the Libiio package (currently included by default in the latest Achilles Yocto Poky console image).
 [iio_info](https://wiki.analog.com/resources/tools-software/linux-software/libiio/iio_info)
