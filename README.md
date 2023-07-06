@@ -4,9 +4,9 @@ This repository contains instructions, scripts, and other files for working with
 
 ADI boards and REFLEX CES carrier boards currently supported:
 
-| ADI FMC board | REFLEX Carrier     |
-| ------------- |:------------------:|
-| DAQ2          | Achilles Turbo SOM |
+| ADI FMC board | REFLEX Carrier        |
+| ------------- |:---------------------:|
+| DAQ2          | Achilles v2 Turbo SOM |
 
 It is assumed that the user is familiar with working with the Achilles SOM, including basic tasks such as:
 - establishing a serial connection to the SOM using terminal emulation software such as PuTTY or minicom
@@ -41,11 +41,11 @@ There are 2 main components required to support any given ADI board on a carrier
 
 ### Building the FPGA HDL Design
 
-Note: all HDL development work to support Achilles was done on a Linux host (Ubuntu 20.04). It is possible to work in Windows if necessary, but Quartus tool setup instructions are not provided here.  Further, other software build tasks can only be done in a Linux environment; therefore it is recommended to do all work in Linux.  The Achilles Turbo SOM was used for development.  Achilles Indus SOM may work but has not been tested.  Achilles Lite SOM is not possible due to top FMC connectors not being installed.
+Note: all HDL development work to support Achilles was done on a Linux host (Ubuntu 20.04). It is possible to work in Windows if necessary, but Quartus tool setup instructions are not provided here.  Further, other software build tasks can only be done in a Linux environment; therefore it is recommended to do all work in Linux.  The Achilles v2 Turbo SOM was used for development.  Achilles Indus SOM may work but has not been tested.  Achilles Lite SOM is not possible due to top FMC connectors not being installed.
 
 For any carrier board that is not officially supported and maintained by ADI (including Achilles), a supported ADI design should be used as a baseline example for manually porting the design to the new carrier.  The Intel Arria 10 SoC Dev Kit (referred to as "a10soc" in the project list) was used as the example for porting to Achilles.  Refer to the [Porting ADI's HDL reference designs](https://wiki.analog.com/resources/fpga/docs/hdl/porting_project_quick_start_guide) wiki page for additional details.
 
-The DAQ2 reference design running on Achilles is currently limited to 5 Gbps data rate on the JESD204B links.
+The DAQ2 reference design running on Achilles v2 Turbo SOM is currently limited to 5 Gbps data rate on the JESD204B links.
 
 Patch files and scripts are provided in this repository to add the files required to support the Achilles SOM.  To build the Quartus project for the DAQ2 board on Achilles SOM as carrier, open a terminal window and run the commands **exactly** as shown in the steps below:
 
@@ -69,7 +69,7 @@ cd $HOME/adi-jesd204b
 
 ### Update Achilles MAX 10 System Controller
 
-The Achilles SOM includes a MAX 10 device used as a System Controller to perform board management fuctions.  One of those functions is to load the Skyworks Si5341 programmable PLL clock generator settings over the I2C bus after board power up.  In the factory default configuration, the both the HPS and FPGA DDR4 controllers are set to operate from a 150 MHz clock to support 2400 MT/s operation.  In order to meet DDR4 timing in the DAQ2 FPGA reference design, it is necessary to reduce the DDR4 clock to 133 MHz.  A pre-compiled .pof file that sets the DDR4 FPGA clock to 133 MHz is provided in the repository in the **achilles/daq2/prog_files** folder. Using the Quartus Programmer GUI or command line, update the MAX 10 device's configuration flash using this new .pof file.  If necessary, refer to the **Achilles Reference Manaul** found in the Achilles BSP Documentation folder for detailed instructions on programming the MAX 10 device.
+The Achilles SOM includes a MAX 10 device used as a System Controller to perform board management fuctions.  One of those functions is to load the Skyworks Si5341 programmable PLL clock generator settings over the I2C bus after board power up.  In the factory default configuration, the both the HPS and FPGA DDR4 controllers are set to operate from a 150 MHz clock to support 2400 MT/s operation.  In order to meet DDR4 timing in the DAQ2 FPGA reference design, it is necessary to reduce the DDR4 clock to 133 MHz.  A pre-compiled .pof file that sets the DDR4 FPGA clock to 133 MHz is provided in the repository in the **achilles/daq2/prog_files** folder. Using the Quartus Programmer GUI or command line, update the MAX 10 device's configuration flash using this new .pof file.  If necessary, refer to the **Achilles Reference Manual** found in the Achilles BSP Documentation folder for detailed instructions on programming the MAX 10 device.
 
 To reset the MAX 10 System Controller configuration back to the factory default, refer to the **FPGA Factory Restore** chapter of the **Achilles Reference Manual**.
 
